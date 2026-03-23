@@ -1,0 +1,884 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CyberEdge Gym | Sua Academia Nunca Para</title>
+<meta name="description" content="Edge Computing para academias. Controle de acesso, treinos e gestão offline — o cérebro da sua academia fica dentro dela."/>
+<meta name="theme-color" content="#050510"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@300;400;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --neon:#00f5ff;
+  --neon2:#7b2fff;
+  --accent:#ff2d78;
+  --bg:#050510;
+  --bg2:#0a0a1a;
+  --bg3:#0d0d22;
+  --text:#e8eaf6;
+  --text2:#9ca3af;
+  --card:#0f0f25;
+  --border:rgba(0,245,255,.15);
+  --font-title:'Syncopate',sans-serif;
+  --font-body:'Space Grotesk',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden;line-height:1.6}
+
+/* ── LOADER ── */
+#loader{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s .2s}
+#loader.hidden{opacity:0;pointer-events:none}
+.loader-text{font-family:var(--font-title);font-size:clamp(.7rem,2vw,1rem);letter-spacing:.3em;color:var(--neon);margin-bottom:24px}
+.loader-counter{font-size:3rem;font-family:var(--font-title);color:#fff;margin-bottom:20px}
+.loader-bar-outer{width:260px;height:2px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
+.loader-bar-inner{height:100%;width:0%;background:linear-gradient(90deg,var(--neon),var(--neon2));transition:width .05s linear}
+
+/* ── NOISE ── */
+.noise{position:fixed;inset:0;pointer-events:none;z-index:9998;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:256px 256px}
+
+/* ── CURSOR ── */
+.cursor{width:12px;height:12px;background:var(--neon);border-radius:50%;position:fixed;pointer-events:none;z-index:9997;transform:translate(-50%,-50%);transition:transform .1s,width .2s,height .2s,opacity .2s;mix-blend-mode:screen}
+.cursor-ring{width:40px;height:40px;border:1px solid var(--neon);border-radius:50%;position:fixed;pointer-events:none;z-index:9996;transform:translate(-50%,-50%);transition:transform .15s ease-out,width .2s,height .2s,opacity .2s;opacity:.5}
+
+/* ── HEADER ── */
+header{position:fixed;top:0;left:0;right:0;z-index:500;padding:20px 40px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(20px);background:rgba(5,5,16,.7);border-bottom:1px solid var(--border);transition:padding .3s}
+header.scrolled{padding:12px 40px}
+.logo{font-family:var(--font-title);font-size:1.1rem;letter-spacing:.1em;color:#fff;text-decoration:none}
+.logo span{color:var(--neon)}
+.nav{display:flex;gap:16px;align-items:center}
+.nav a{text-decoration:none;font-size:.75rem;letter-spacing:.15em;color:var(--text2);transition:color .2s;font-weight:600}
+.nav a:hover{color:var(--neon)}
+.nav-cta{background:transparent;border:1px solid var(--neon);color:var(--neon)!important;padding:8px 20px;border-radius:2px;transition:background .2s!important}
+.nav-cta:hover{background:var(--neon)!important;color:var(--bg)!important}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
+.hamburger span{display:block;width:24px;height:1.5px;background:var(--text);transition:.3s}
+
+/* ── MOBILE NAV ── */
+.mobile-nav{position:fixed;inset:0;background:var(--bg);z-index:490;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;opacity:0;pointer-events:none;transition:opacity .3s}
+.mobile-nav.open{opacity:1;pointer-events:all}
+.mobile-nav a{font-family:var(--font-title);font-size:1.2rem;letter-spacing:.2em;color:var(--text);text-decoration:none;transition:color .2s}
+.mobile-nav a:hover{color:var(--neon)}
+
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:120px 40px 80px}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(0,245,255,.08) 0%,transparent 70%),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(123,47,255,.1) 0%,transparent 60%),var(--bg)}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%}
+.hero-content{position:relative;z-index:2;text-align:center;max-width:900px}
+.hero-tag{display:inline-block;font-size:.7rem;letter-spacing:.3em;color:var(--neon);border:1px solid var(--border);padding:6px 16px;border-radius:2px;margin-bottom:32px;background:rgba(0,245,255,.05)}
+.hero-title{font-family:var(--font-title);font-size:clamp(2.2rem,7vw,6rem);line-height:1.05;margin-bottom:24px;color:#fff}
+.hero-title .neon{color:var(--neon);text-shadow:0 0 40px rgba(0,245,255,.5)}
+.hero-sub{font-size:clamp(.95rem,2vw,1.2rem);color:var(--text2);max-width:600px;margin:0 auto 48px;font-weight:300}
+.hero-btns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.btn-primary{background:var(--neon);color:var(--bg);padding:14px 36px;font-family:var(--font-title);font-size:.75rem;letter-spacing:.15em;border:none;cursor:pointer;border-radius:2px;text-decoration:none;transition:transform .2s,box-shadow .2s}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,245,255,.4)}
+.btn-outline{background:transparent;color:var(--neon);padding:14px 36px;font-family:var(--font-title);font-size:.75rem;letter-spacing:.15em;border:1px solid var(--neon);cursor:pointer;border-radius:2px;text-decoration:none;transition:background .2s}
+.btn-outline:hover{background:rgba(0,245,255,.08)}
+.hero-scroll{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px}
+.scroll-line{width:1px;height:60px;background:linear-gradient(to bottom,var(--neon),transparent);animation:scrollPulse 2s ease-in-out infinite}
+.scroll-dot{width:6px;height:6px;background:var(--neon);border-radius:50%}
+@keyframes scrollPulse{0%,100%{opacity:.3}50%{opacity:1}}
+
+/* ── MARQUEE ── */
+.marquee{overflow:hidden;padding:20px 0;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.marquee-inner{display:flex;gap:0;width:max-content;animation:marqueeAnim 25s linear infinite}
+.marquee-item{font-family:var(--font-title);font-size:.65rem;letter-spacing:.25em;color:var(--text2);padding:0 40px;white-space:nowrap}
+.marquee-item .dot{color:var(--neon);margin-left:8px}
+.marquee:hover .marquee-inner{animation-play-state:paused}
+@keyframes marqueeAnim{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ── SECTIONS COMMON ── */
+section{padding:100px 40px}
+.section-tag{display:inline-block;font-size:.65rem;letter-spacing:.35em;color:var(--neon);margin-bottom:16px;opacity:.8}
+.section-title{font-family:var(--font-title);font-size:clamp(1.8rem,4vw,3.2rem);line-height:1.1;margin-bottom:20px;color:#fff}
+.section-desc{color:var(--text2);font-size:1rem;max-width:560px;line-height:1.7}
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s,transform .7s}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.container{max-width:1200px;margin:0 auto}
+
+/* ── ABOUT ── */
+.about{background:var(--bg2)}
+.about-inner{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;max-width:1100px;margin:0 auto}
+.about-visual{position:relative;height:380px;display:flex;align-items:center;justify-content:center}
+#cube3d{width:260px;height:260px}
+.about-pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.pill{background:rgba(0,245,255,.06);border:1px solid var(--border);padding:6px 16px;border-radius:2px;font-size:.75rem;letter-spacing:.1em;color:var(--neon)}
+.big-text{font-size:1.05rem;line-height:1.75;color:var(--text2);margin-top:16px}
+
+/* ── PROBLEM ── */
+.problem-section{background:var(--bg3);text-align:center}
+.problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;max-width:1000px;margin:60px auto 0}
+.problem-card{background:var(--card);border:1px solid var(--border);padding:36px 28px;border-radius:4px;transition:border-color .3s,transform .3s}
+.problem-card:hover{border-color:var(--neon);transform:translateY(-4px)}
+.problem-icon{font-size:2.2rem;margin-bottom:16px}
+.problem-card h3{font-family:var(--font-title);font-size:.85rem;letter-spacing:.1em;color:#fff;margin-bottom:12px}
+.problem-card p{font-size:.9rem;color:var(--text2);line-height:1.6}
+
+/* ── SOLUTION / EDGE ── */
+.edge-section{background:var(--bg)}
+.edge-inner{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;max-width:1100px;margin:0 auto}
+.edge-diagram{position:relative;display:flex;flex-direction:column;align-items:center;gap:0}
+.edge-node{background:var(--card);border:1px solid var(--border);padding:20px 28px;border-radius:4px;width:100%;max-width:300px;text-align:center;position:relative;transition:border-color .3s}
+.edge-node.active{border-color:var(--neon);background:rgba(0,245,255,.05)}
+.edge-node-title{font-family:var(--font-title);font-size:.7rem;letter-spacing:.12em;color:var(--neon);margin-bottom:6px}
+.edge-node-desc{font-size:.8rem;color:var(--text2)}
+.edge-connector{width:1px;height:40px;background:linear-gradient(to bottom,var(--neon),var(--neon2));margin:0 auto;position:relative}
+.edge-connector::after{content:"▼";color:var(--neon2);position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);font-size:.6rem}
+.edge-badge{position:absolute;right:-14px;top:50%;transform:translateY(-50%);background:var(--neon);color:var(--bg);font-size:.6rem;padding:4px 8px;letter-spacing:.1em;font-weight:700;border-radius:2px}
+
+/* ── SERVICES ── */
+.services-section{background:var(--bg2)}
+.services-section .section-desc{margin:0 auto;text-align:center}
+.bento{display:grid;grid-template-columns:repeat(12,1fr);grid-auto-rows:minmax(200px,auto);gap:16px;max-width:1100px;margin:56px auto 0}
+.bento-card{background:var(--card);border:1px solid var(--border);padding:32px;border-radius:4px;transition:border-color .3s,transform .3s;cursor:pointer;position:relative;overflow:hidden}
+.bento-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,245,255,.03) 0%,transparent 60%);pointer-events:none}
+.bento-card:hover{border-color:var(--neon);transform:translateY(-3px)}
+.bento-card:hover::before{background:linear-gradient(135deg,rgba(0,245,255,.07) 0%,transparent 60%)}
+.bento-card.wide{grid-column:span 8}
+.bento-card.narrow{grid-column:span 4}
+.bento-card.half{grid-column:span 6}
+.bento-card.full{grid-column:span 12}
+.bento-tag{font-size:.6rem;letter-spacing:.2em;color:var(--neon);opacity:.7;margin-bottom:10px;display:block}
+.bento-plus{position:absolute;top:20px;right:20px;font-size:1.4rem;color:var(--neon);opacity:.5}
+.bento-card h3{font-family:var(--font-title);font-size:.95rem;letter-spacing:.05em;color:#fff;margin-bottom:10px;line-height:1.3}
+.bento-card p{font-size:.88rem;color:var(--text2);line-height:1.65}
+
+/* ── METHOD ── */
+.method-section{background:var(--bg3)}
+.method-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1100px;margin:56px auto 0}
+.step-card{background:var(--card);border:1px solid var(--border);padding:32px 24px;border-radius:4px;position:relative;overflow:hidden;transition:border-color .3s}
+.step-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--neon),var(--neon2));transform:scaleX(0);transform-origin:left;transition:transform .4s}
+.step-card:hover{border-color:var(--neon)}
+.step-card:hover::after{transform:scaleX(1)}
+.step-num{font-family:var(--font-title);font-size:3rem;color:rgba(0,245,255,.08);position:absolute;top:16px;right:20px;line-height:1}
+.step-card h4{font-family:var(--font-title);font-size:.75rem;letter-spacing:.1em;color:var(--neon);margin-bottom:12px}
+.step-card p{font-size:.88rem;color:var(--text2);line-height:1.6}
+
+/* ── METRICS ── */
+.metrics-section{background:var(--bg);text-align:center}
+.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;max-width:900px;margin:56px auto 0}
+.metric-item h3{font-family:var(--font-title);font-size:clamp(2rem,5vw,3.5rem);color:var(--neon);margin-bottom:12px;text-shadow:0 0 30px rgba(0,245,255,.3)}
+.metric-item p{font-size:.9rem;color:var(--text2);line-height:1.6}
+
+/* ── FAQ ── */
+.faq-section{background:var(--bg2)}
+.faq-section .section-title{margin-bottom:48px}
+.faq-list{max-width:760px;margin:0 auto}
+details.faq-item{border-bottom:1px solid var(--border);overflow:hidden}
+details.faq-item summary{padding:22px 4px;font-size:.95rem;font-weight:600;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;color:var(--text)}
+details.faq-item summary::after{content:'+';font-size:1.4rem;color:var(--neon);transition:transform .3s;flex-shrink:0}
+details[open] summary::after{transform:rotate(45deg)}
+details.faq-item p{padding:0 4px 22px;font-size:.9rem;color:var(--text2);line-height:1.7}
+
+/* ── TESTIMONIALS ── */
+.social-section{background:var(--bg3);text-align:center}
+.testimonials{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1100px;margin:56px auto 0}
+.testi-card{background:var(--card);border:1px solid var(--border);padding:32px;border-radius:4px;text-align:left;transition:border-color .3s}
+.testi-card:hover{border-color:rgba(0,245,255,.4)}
+.testi-card blockquote{font-size:.92rem;color:var(--text);line-height:1.7;margin-bottom:20px;font-style:italic}
+.testi-card cite{font-size:.78rem;color:var(--neon);letter-spacing:.1em;font-style:normal}
+
+/* ── CTA MANIFESTO ── */
+.manifesto{background:var(--bg);text-align:center;position:relative;overflow:hidden;padding:120px 40px}
+.manifesto::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 50%,rgba(0,245,255,.05) 0%,transparent 70%)}
+.manifesto h2{font-family:var(--font-title);font-size:clamp(2rem,5vw,4rem);line-height:1.1;margin-bottom:24px;position:relative}
+.manifesto h2 .accent{color:var(--neon)}
+.manifesto p{font-size:1.05rem;color:var(--text2);max-width:600px;margin:0 auto 48px;position:relative}
+
+/* ── FORM ── */
+.form-section{background:var(--bg2)}
+.form-inner{max-width:900px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
+.form-text h2{font-family:var(--font-title);font-size:clamp(1.6rem,3vw,2.4rem);line-height:1.2;margin-bottom:16px;color:#fff}
+.form-text p{font-size:.95rem;color:var(--text2);line-height:1.7;margin-bottom:20px}
+.form-bullets{list-style:none;display:flex;flex-direction:column;gap:10px}
+.form-bullets li{font-size:.88rem;color:var(--text2);padding-left:20px;position:relative}
+.form-bullets li::before{content:'✓';position:absolute;left:0;color:var(--neon)}
+form.contact-form{display:flex;flex-direction:column;gap:16px}
+.floating{position:relative}
+.floating input,.floating textarea,.floating select{width:100%;background:rgba(255,255,255,.03);border:1px solid var(--border);padding:14px 16px;color:var(--text);font-family:var(--font-body);font-size:.92rem;border-radius:2px;outline:none;transition:border-color .2s}
+.floating textarea{resize:vertical;min-height:120px}
+.floating input:focus,.floating textarea:focus{border-color:var(--neon)}
+.floating label{position:absolute;top:14px;left:16px;font-size:.88rem;color:var(--text2);pointer-events:none;transition:.2s;background:transparent}
+.floating input:focus~label,.floating input:not(:placeholder-shown)~label,
+.floating textarea:focus~label,.floating textarea:not(:placeholder-shown)~label{top:-8px;font-size:.7rem;color:var(--neon);background:var(--bg2);padding:0 4px}
+.floating input::placeholder,.floating textarea::placeholder{color:transparent}
+.submit-btn{background:var(--neon);color:var(--bg);padding:16px;font-family:var(--font-title);font-size:.75rem;letter-spacing:.2em;border:none;cursor:pointer;border-radius:2px;transition:transform .2s,box-shadow .2s;margin-top:8px}
+.submit-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,245,255,.35)}
+.form-note{font-size:.75rem;color:var(--text2);opacity:.6;margin-top:4px;line-height:1.5}
+.form-success{display:none;text-align:center;padding:40px;background:rgba(0,245,255,.05);border:1px solid var(--neon);border-radius:4px}
+.form-success.show{display:block}
+.form-success h3{font-family:var(--font-title);color:var(--neon);margin-bottom:12px;letter-spacing:.1em}
+
+/* ── FOOTER ── */
+footer{background:var(--bg);border-top:1px solid var(--border);padding:64px 40px 32px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1.5fr;gap:60px;max-width:1100px;margin:0 auto 48px}
+.footer-logo{font-family:var(--font-title);font-size:1.2rem;color:#fff;margin-bottom:12px}
+.footer-logo span{color:var(--neon)}
+.footer-tagline{font-size:.88rem;color:var(--text2);line-height:1.6;max-width:280px}
+.footer-col h3{font-family:var(--font-title);font-size:.7rem;letter-spacing:.2em;color:var(--neon);margin-bottom:20px}
+.footer-col a{display:block;font-size:.88rem;color:var(--text2);text-decoration:none;margin-bottom:10px;transition:color .2s}
+.footer-col a:hover{color:var(--neon)}
+.footer-col p{font-size:.88rem;color:var(--text2);margin-bottom:8px}
+.footer-bottom{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid var(--border);font-size:.75rem;color:var(--text2);opacity:.6;flex-wrap:wrap;gap:12px}
+
+/* ── FLOATING CTA ── */
+.float-cta{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);z-index:400;opacity:0;pointer-events:none;transition:opacity .4s}
+.float-cta.show{opacity:1;pointer-events:all}
+.float-cta a{background:var(--neon);color:var(--bg);padding:14px 32px;font-family:var(--font-title);font-size:.7rem;letter-spacing:.2em;border-radius:2px;text-decoration:none;display:flex;align-items:center;gap:10px;box-shadow:0 8px 40px rgba(0,245,255,.35)}
+.pulse{width:8px;height:8px;background:var(--bg);border-radius:50%;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.5)}}
+
+/* ── WA FAB ── */
+.wa-fab{position:fixed;bottom:90px;right:28px;z-index:400;width:54px;height:54px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(37,211,102,.4);transition:transform .2s}
+.wa-fab:hover{transform:scale(1.08)}
+
+/* ── SCROLL PROGRESS ── */
+.progress-bar{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--neon),var(--neon2));z-index:600;transition:width .1s}
+
+/* ── SECTION INDICATOR ── */
+.sec-indicator{position:fixed;right:24px;top:50%;transform:translateY(-50%);z-index:400;display:flex;flex-direction:column;gap:10px}
+.sec-dot{width:8px;height:8px;border-radius:50%;border:1px solid var(--text2);background:transparent;cursor:pointer;transition:.3s;padding:0}
+.sec-dot.active{background:var(--neon);border-color:var(--neon)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+.about-inner,.edge-inner,.form-inner,.footer-grid{grid-template-columns:1fr}
+.about-visual{height:220px}
+.bento-card.wide,.bento-card.narrow,.bento-card.half,.bento-card.full{grid-column:span 12}
+.method-grid{grid-template-columns:repeat(2,1fr)}
+.metrics-grid{grid-template-columns:repeat(2,1fr)}
+.testimonials{grid-template-columns:1fr}
+.problem-grid{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+header{padding:16px 24px}
+.nav{display:none}
+.hamburger{display:flex}
+section{padding:72px 24px}
+.hero{padding:100px 24px 72px}
+.metrics-grid{grid-template-columns:1fr}
+.method-grid{grid-template-columns:1fr}
+.sec-indicator{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="noise"></div>
+<div class="cursor" id="cur"></div>
+<div class="cursor-ring" id="cur-ring"></div>
+<div class="progress-bar" id="prog"></div>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-text">CYBEGEDGE GYM — BOOT SEQUENCE</div>
+  <div class="loader-counter" id="lc">0%</div>
+  <div class="loader-bar-outer"><div class="loader-bar-inner" id="lb"></div></div>
+</div>
+
+<!-- HEADER -->
+<header id="hdr">
+  <a href="#inicio" class="logo scroll-link">CYBER<span>EDGE</span> GYM</a>
+  <nav class="nav">
+    <a href="#sobre" class="scroll-link">SOBRE</a>
+    <a href="#solucao" class="scroll-link">SOLUÇÃO</a>
+    <a href="#servicos" class="scroll-link">MÓDULOS</a>
+    <a href="#metodo" class="scroll-link">MÉTODO</a>
+    <a href="#contato" class="scroll-link nav-cta">INICIAR PROJETO</a>
+  </nav>
+  <button class="hamburger" id="ham" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<!-- MOBILE NAV -->
+<nav class="mobile-nav" id="mob-nav">
+  <a href="#inicio" class="scroll-link mob-close">INÍCIO</a>
+  <a href="#sobre" class="scroll-link mob-close">SOBRE</a>
+  <a href="#solucao" class="scroll-link mob-close">SOLUÇÃO</a>
+  <a href="#servicos" class="scroll-link mob-close">MÓDULOS</a>
+  <a href="#metodo" class="scroll-link mob-close">MÉTODO</a>
+  <a href="#contato" class="scroll-link mob-close">CONTATO</a>
+</nav>
+
+<!-- SECTION INDICATOR -->
+<nav class="sec-indicator" id="si">
+  <button class="sec-dot active" data-s="inicio"></button>
+  <button class="sec-dot" data-s="sobre"></button>
+  <button class="sec-dot" data-s="solucao"></button>
+  <button class="sec-dot" data-s="servicos"></button>
+  <button class="sec-dot" data-s="metodo"></button>
+  <button class="sec-dot" data-s="contato"></button>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="inicio">
+  <div class="hero-bg"></div>
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-content reveal">
+    <div class="hero-tag">EDGE COMPUTING PARA ACADEMIAS</div>
+    <h1 class="hero-title">
+      SUA ACADEMIA<br>
+      <span class="neon">NUNCA PARA.</span>
+    </h1>
+    <p class="hero-sub">O cérebro da sua academia fica dentro dela. Acesso, treinos e gestão funcionando 100% — mesmo sem internet.</p>
+    <div class="hero-btns">
+      <a href="#contato" class="btn-primary scroll-link">SOLICITAR DEMO</a>
+      <a href="#solucao" class="btn-outline scroll-link">VER SOLUÇÃO</a>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    <div class="scroll-dot"></div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-inner">
+    <span class="marquee-item">EDGE COMPUTING <span class="dot">•</span></span>
+    <span class="marquee-item">CONTROLE DE ACESSO <span class="dot">•</span></span>
+    <span class="marquee-item">TREINOS OFFLINE <span class="dot">•</span></span>
+    <span class="marquee-item">GESTÃO INTELIGENTE <span class="dot">•</span></span>
+    <span class="marquee-item">SEM DEPENDÊNCIA DE INTERNET <span class="dot">•</span></span>
+    <span class="marquee-item">PROCESSAMENTO NA BORDA <span class="dot">•</span></span>
+    <span class="marquee-item">EDGE COMPUTING <span class="dot">•</span></span>
+    <span class="marquee-item">CONTROLE DE ACESSO <span class="dot">•</span></span>
+    <span class="marquee-item">TREINOS OFFLINE <span class="dot">•</span></span>
+    <span class="marquee-item">GESTÃO INTELIGENTE <span class="dot">•</span></span>
+    <span class="marquee-item">SEM DEPENDÊNCIA DE INTERNET <span class="dot">•</span></span>
+    <span class="marquee-item">PROCESSAMENTO NA BORDA <span class="dot">•</span></span>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section class="about" id="sobre">
+  <div class="about-inner container">
+    <div class="about-visual reveal">
+      <canvas id="cube3d" width="260" height="260"></canvas>
+    </div>
+    <div class="reveal">
+      <span class="section-tag">SOBRE NÓS</span>
+      <h2 class="section-title">O Universo<br>CyberEdge</h2>
+      <div style="width:48px;height:2px;background:linear-gradient(90deg,var(--neon),var(--neon2));margin-bottom:24px"></div>
+      <p class="section-desc">Uma operação focada em tecnologia para academias — nascida para eliminar a dependência de internet e transformar sua gestão em algo verdadeiramente inteligente.</p>
+      <p class="big-text">No modelo Edge Computing, o "cérebro" do sistema fica <strong style="color:#fff">dentro da sua academia</strong>, não na nuvem. Acesso liberado, treinos disponíveis e gestão funcionando — independente de qualquer falha externa.</p>
+      <div class="about-pills">
+        <span class="pill">Edge Server Local</span>
+        <span class="pill">Catracas Inteligentes</span>
+        <span class="pill">App Offline-First</span>
+        <span class="pill">Sincronização Automática</span>
+        <span class="pill">Biometria</span>
+        <span class="pill">IA de Presença</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="problem-section" id="problema">
+  <div class="container">
+    <span class="section-tag">O PROBLEMA</span>
+    <h2 class="section-title reveal">Grandes academias têm<br>grandes dependências.</h2>
+    <p class="section-desc reveal" style="margin:0 auto;text-align:center">A maioria das soluções no mercado depende de servidores externos. Quando a internet cai, a academia para.</p>
+    <div class="problem-grid">
+      <div class="problem-card reveal">
+        <div class="problem-icon">🌐</div>
+        <h3>INTERNET INSTÁVEL</h3>
+        <p>Queda de sinal bloqueia a catraca, impede check-in e deixa alunos na porta esperando.</p>
+      </div>
+      <div class="problem-card reveal">
+        <div class="problem-icon">📱</div>
+        <h3>APP SEM TREINO</h3>
+        <p>Aluno sem sinal não acessa o treino do dia. Experiência comprometida e engajamento caindo.</p>
+      </div>
+      <div class="problem-card reveal">
+        <div class="problem-icon">☁️</div>
+        <h3>NUVEM COMO RISCO</h3>
+        <p>Servidor em nuvem fora do ar significa dados inacessíveis, pagamentos travados e caos operacional.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUTION / EDGE -->
+<section class="edge-section" id="solucao">
+  <div class="edge-inner container">
+    <div class="reveal">
+      <span class="section-tag">A SOLUÇÃO</span>
+      <h2 class="section-title">Edge Computing.<br><span style="color:var(--neon)">O cérebro fica aqui.</span></h2>
+      <div style="width:48px;height:2px;background:linear-gradient(90deg,var(--neon),var(--neon2));margin-bottom:24px"></div>
+      <p class="section-desc">Instalamos um servidor edge compacto dentro da academia. Ele processa tudo localmente em tempo real — e sincroniza com a nuvem quando a internet voltar.</p>
+      <ul style="margin-top:28px;list-style:none;display:flex;flex-direction:column;gap:14px">
+        <li style="font-size:.92rem;color:var(--text2);padding-left:20px;position:relative"><span style="position:absolute;left:0;color:var(--neon)">→</span> Latência inferior a 10ms para liberação de catraca</li>
+        <li style="font-size:.92rem;color:var(--text2);padding-left:20px;position:relative"><span style="position:absolute;left:0;color:var(--neon)">→</span> Dados criptografados e armazenados localmente</li>
+        <li style="font-size:.92rem;color:var(--text2);padding-left:20px;position:relative"><span style="position:absolute;left:0;color:var(--neon)">→</span> Sincronização automática multi-unidade</li>
+        <li style="font-size:.92rem;color:var(--text2);padding-left:20px;position:relative"><span style="position:absolute;left:0;color:var(--neon)">→</span> Dashboard de gestão em tempo real</li>
+      </ul>
+    </div>
+    <div class="edge-diagram reveal">
+      <div class="edge-node">
+        <div class="edge-node-title">☁️ NUVEM CENTRAL</div>
+        <div class="edge-node-desc">Backup, relatórios consolidados e sincronização multi-unidades</div>
+      </div>
+      <div class="edge-connector"></div>
+      <div class="edge-node active">
+        <div class="edge-badge">LOCAL</div>
+        <div class="edge-node-title">⚡ EDGE SERVER — SUA ACADEMIA</div>
+        <div class="edge-node-desc">Processa <strong style="color:#fff">tudo</strong> localmente. Funciona 100% offline.</div>
+      </div>
+      <div class="edge-connector"></div>
+      <div class="edge-node">
+        <div class="edge-node-title">📡 DISPOSITIVOS</div>
+        <div class="edge-node-desc">Catracas · Totens · App · Biometria · Câmeras</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE 2 -->
+<div class="marquee" style="background:var(--bg3)" aria-hidden="true">
+  <div class="marquee-inner" style="animation-direction:reverse">
+    <span class="marquee-item">ZERO DOWNTIME <span class="dot">•</span></span>
+    <span class="marquee-item">LATÊNCIA &lt;10ms <span class="dot">•</span></span>
+    <span class="marquee-item">FUNCIONA OFFLINE <span class="dot">•</span></span>
+    <span class="marquee-item">DADOS NA SUA ACADEMIA <span class="dot">•</span></span>
+    <span class="marquee-item">IA LOCAL <span class="dot">•</span></span>
+    <span class="marquee-item">MULTI-UNIDADES <span class="dot">•</span></span>
+    <span class="marquee-item">ZERO DOWNTIME <span class="dot">•</span></span>
+    <span class="marquee-item">LATÊNCIA &lt;10ms <span class="dot">•</span></span>
+    <span class="marquee-item">FUNCIONA OFFLINE <span class="dot">•</span></span>
+    <span class="marquee-item">DADOS NA SUA ACADEMIA <span class="dot">•</span></span>
+    <span class="marquee-item">IA LOCAL <span class="dot">•</span></span>
+    <span class="marquee-item">MULTI-UNIDADES <span class="dot">•</span></span>
+  </div>
+</div>
+
+<!-- SERVICES / MODULES -->
+<section class="services-section" id="servicos">
+  <div class="container" style="text-align:center">
+    <span class="section-tag">MÓDULOS</span>
+    <h2 class="section-title reveal">Sistema Completo<br>para Academias</h2>
+    <p class="section-desc reveal">Do controle de acesso ao treino personalizado — tudo rodando dentro da sua academia.</p>
+  </div>
+  <div class="bento container">
+    <div class="bento-card wide reveal">
+      <div class="bento-plus">+</div>
+      <span class="bento-tag">ACESSO • SEGURANÇA • BIOMETRIA</span>
+      <h3>Controle de Acesso Inteligente</h3>
+      <p>Liberação de catraca por biometria, QR Code ou cartão RFID com processamento local de &lt;10ms. Sem internet — sem problema. Funciona mesmo durante quedas de sinal, com log completo de entradas e saídas sincronizado automaticamente.</p>
+    </div>
+    <div class="bento-card narrow reveal">
+      <div class="bento-plus">+</div>
+      <span class="bento-tag">APP • OFFLINE FIRST</span>
+      <h3>App de Treinos Offline</h3>
+      <p>Aluno acessa treino, histórico e vídeos mesmo sem sinal. Sincroniza quando conectar.</p>
+    </div>
+    <div class="bento-card half reveal">
+      <div class="bento-plus">+</div>
+      <span class="bento-tag">GESTÃO • FINANCEIRO</span>
+      <h3>Gestão Financeira Local</h3>
+      <p>Cobranças, inadimplência e relatórios processados no edge. Dados disponíveis 100% do tempo para a recepção e gestores.</p>
+    </div>
+    <div class="bento-card half reveal">
+      <div class="bento-plus">+</div>
+      <span class="bento-tag">IA • PRESENÇA • ENGAJAMENTO</span>
+      <h3>IA de Engajamento</h3>
+      <p>Detecta padrão de frequência, alerta para alunos sumidos e personaliza notificações — tudo rodando no servidor local.</p>
+    </div>
+    <div class="bento-card full reveal">
+      <div class="bento-plus">+</div>
+      <span class="bento-tag">MULTI-UNIDADES • DASHBOARD • ANALYTICS</span>
+      <h3>Dashboard Multi-Unidades em Tempo Real</h3>
+      <p>Visualize presença, receita, inadimplência e performance de cada unidade em tempo real. Quando há internet, todos os dados se consolidam automaticamente. O gestor decide com informação — não com achismo.</p>
+    </div>
+  </div>
+</section>
+
+<!-- METHOD -->
+<section class="method-section" id="metodo">
+  <div class="container" style="text-align:center">
+    <span class="section-tag">PROCESSO</span>
+    <h2 class="section-title reveal">Método CyberEdge</h2>
+    <p class="section-desc reveal" style="margin:0 auto">Implementação rápida, sem parar sua operação e com suporte completo do primeiro ao último dia.</p>
+  </div>
+  <div class="method-grid">
+    <div class="step-card reveal">
+      <div class="step-num">01</div>
+      <h4>DIAGNÓSTICO</h4>
+      <p>Mapeamos infraestrutura, volume de alunos, número de catracas e necessidades específicas da sua academia.</p>
+    </div>
+    <div class="step-card reveal">
+      <div class="step-num">02</div>
+      <h4>INSTALAÇÃO EDGE</h4>
+      <p>Instalamos o servidor edge localmente. Setup em menos de 48h, sem interrupção da operação.</p>
+    </div>
+    <div class="step-card reveal">
+      <div class="step-num">03</div>
+      <h4>CONFIGURAÇÃO & MIGRAÇÃO</h4>
+      <p>Migramos dados, configuramos dispositivos, integramos catracas e treinamos a equipe.</p>
+    </div>
+    <div class="step-card reveal">
+      <div class="step-num">04</div>
+      <h4>GO LIVE & SUPORTE</h4>
+      <p>Sistema ativo com monitoramento 24/7. Atualizações automáticas e suporte técnico dedicado.</p>
+    </div>
+  </div>
+</section>
+
+<!-- METRICS -->
+<section class="metrics-section" id="impacto">
+  <div class="container">
+    <span class="section-tag">IMPACTO</span>
+    <h2 class="section-title reveal">Resultados que<br>transformam operações.</h2>
+    <p class="section-desc reveal" style="margin:0 auto;text-align:center">Academias que implantaram o CyberEdge eliminaram interrupções e melhoraram a experiência do aluno radicalmente.</p>
+    <div class="metrics-grid">
+      <div class="metric-item reveal">
+        <h3>99.9%</h3>
+        <p>Uptime no controle de acesso, mesmo sem conectividade com a internet.</p>
+      </div>
+      <div class="metric-item reveal">
+        <h3>&lt;10ms</h3>
+        <p>Latência na liberação de catraca. Fila na recepção eliminada no primeiro dia.</p>
+      </div>
+      <div class="metric-item reveal">
+        <h3>+40%</h3>
+        <p>Aumento médio no engajamento de alunos com acesso offline ao app de treinos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="social-section" id="depoimentos">
+  <div class="container">
+    <span class="section-tag">QUEM CONFIA NO CYBEREDGE</span>
+    <h2 class="section-title reveal">Gestores que pararam<br>de parar.</h2>
+    <div class="testimonials">
+      <div class="testi-card reveal">
+        <blockquote>"A internet caía toda semana e a fila na recepção era um caos. Depois do CyberEdge, isso simplesmente deixou de existir."</blockquote>
+        <cite>— R. Almeida, Diretor Operacional · Academia Premium SP</cite>
+      </div>
+      <div class="testi-card reveal">
+        <blockquote>"Implantaram em menos de 48h. Nossos alunos notaram a diferença imediatamente — app funcionando, catraca rápida, zero reclamação."</blockquote>
+        <cite>— F. Costa, CEO · Rede de Academias — 4 unidades</cite>
+      </div>
+      <div class="testi-card reveal">
+        <blockquote>"O dashboard consolidado das nossas 6 unidades mudou completamente como a gente toma decisões. Informação real, em tempo real."</blockquote>
+        <cite>— L. Barbosa, Head de Operações · Rede Fitness Regional</cite>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section" id="faq">
+  <div class="container">
+    <span class="section-tag">PERGUNTAS FREQUENTES</span>
+    <h2 class="section-title reveal">Dúvidas antes<br>de começar.</h2>
+    <div class="faq-list">
+      <details class="faq-item">
+        <summary>O que acontece se o servidor edge da academia tiver problema?</summary>
+        <p>O CyberEdge opera com redundância local. Em caso de falha no hardware, há um modo de contingência imediato e nosso suporte 24/7 atua remotamente. Garantimos SLA de 4h para resolução crítica.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Quanto tempo leva a implementação?</summary>
+        <p>O setup básico é feito em até 48 horas. Academias com múltiplas catracas e integrações específicas podem levar até 5 dias úteis, sem interromper a operação.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Funciona com qualquer sistema de catraca?</summary>
+        <p>Compatível com os principais fabricantes do mercado (Aldeia, Control iD, Nitgen, entre outros). Caso seu equipamento não esteja na lista, fazemos um diagnóstico de integração sem custo.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Meus dados ficam seguros?</summary>
+        <p>Todos os dados são criptografados localmente (AES-256). Nenhuma informação sensível trafega sem criptografia. Você tem controle total sobre o que sai da sua rede.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Funciona para redes com múltiplas unidades?</summary>
+        <p>Sim. Cada unidade tem seu edge server independente, mas todos se comunicam e consolidam dados quando há internet. O gestor enxerga tudo em um único dashboard.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Qual é o modelo de contratação?</summary>
+        <p>Assinatura mensal que inclui hardware, software, manutenção e suporte. Sem taxa de setup oculta. Contrato mínimo de 12 meses.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- MANIFESTO CTA -->
+<section class="manifesto" id="manifesto">
+  <div class="container reveal">
+    <h2>Sua academia não pode<br><span class="accent">depender da internet.</span></h2>
+    <p>Se seus alunos ficam na porta esperando, sua receita está em risco. A próxima movimentação começa agora.</p>
+    <a href="#contato" class="btn-primary scroll-link">SOLICITAR DEMO GRATUITA</a>
+  </div>
+</section>
+
+<!-- STRIP 2 -->
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-inner">
+    <span class="marquee-item">SUA ACADEMIA MERECE SER INQUEBRÁVEL <span class="dot">•</span></span>
+    <span class="marquee-item">O PRÓXIMO NÍVEL COMEÇA AGORA <span class="dot">•</span></span>
+    <span class="marquee-item">EDGE COMPUTING PARA ACADEMIAS <span class="dot">•</span></span>
+    <span class="marquee-item">ZERO INTERRUPÇÃO <span class="dot">•</span></span>
+    <span class="marquee-item">SUA ACADEMIA MERECE SER INQUEBRÁVEL <span class="dot">•</span></span>
+    <span class="marquee-item">O PRÓXIMO NÍVEL COMEÇA AGORA <span class="dot">•</span></span>
+    <span class="marquee-item">EDGE COMPUTING PARA ACADEMIAS <span class="dot">•</span></span>
+    <span class="marquee-item">ZERO INTERRUPÇÃO <span class="dot">•</span></span>
+  </div>
+</div>
+
+<!-- FORM -->
+<section class="form-section" id="contato">
+  <div class="form-inner container">
+    <div class="form-text reveal">
+      <span class="section-tag">APLICAÇÃO</span>
+      <h2>Vamos eliminar<br>suas interrupções?</h2>
+      <p>Preencha o formulário e nossa equipe técnica retorna em até 24h com uma análise personalizada para sua academia.</p>
+      <ul class="form-bullets">
+        <li>Demo gratuita e diagnóstico sem compromisso</li>
+        <li>Proposta sob medida para seu volume</li>
+        <li>Implementação rápida sem parar a operação</li>
+        <li>Suporte 24/7 incluso no plano</li>
+      </ul>
+    </div>
+    <div class="reveal">
+      <div class="form-success" id="fsuccess">
+        <h3>APLICAÇÃO ENVIADA ✓</h3>
+        <p>Recebemos sua aplicação! Nossa equipe retorna em até 24h.</p>
+      </div>
+      <form class="contact-form" id="cform">
+        <div class="floating">
+          <input type="text" id="f-nome" placeholder=" " required/>
+          <label for="f-nome">Seu Nome</label>
+        </div>
+        <div class="floating">
+          <input type="email" id="f-email" placeholder=" " required/>
+          <label for="f-email">Seu E-mail</label>
+        </div>
+        <div class="floating">
+          <input type="tel" id="f-tel" placeholder=" " required/>
+          <label for="f-tel">WhatsApp / Telefone</label>
+        </div>
+        <div class="floating">
+          <input type="text" id="f-academia" placeholder=" " required/>
+          <label for="f-academia">Nome da Academia</label>
+        </div>
+        <div class="floating">
+          <input type="text" id="f-alunos" placeholder=" "/>
+          <label for="f-alunos">Número aproximado de alunos</label>
+        </div>
+        <div class="floating">
+          <textarea id="f-msg" placeholder=" " rows="4" required></textarea>
+          <label for="f-msg">Qual é o maior desafio operacional hoje?</label>
+        </div>
+        <button type="submit" class="submit-btn">SOLICITAR DEMO GRATUITA</button>
+        <p class="form-note">Seus dados são usados apenas para retorno comercial. Política LGPD aplicada.</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-logo">CYBER<span>EDGE</span> GYM</div>
+      <p class="footer-tagline">Edge Computing para academias. O cérebro da sua operação fica onde deve estar — dentro da sua academia.</p>
+    </div>
+    <div class="footer-col">
+      <h3>NAVEGAÇÃO</h3>
+      <a href="#inicio" class="scroll-link">Início</a>
+      <a href="#sobre" class="scroll-link">Sobre</a>
+      <a href="#solucao" class="scroll-link">Solução</a>
+      <a href="#servicos" class="scroll-link">Módulos</a>
+      <a href="#metodo" class="scroll-link">Método</a>
+      <a href="#faq" class="scroll-link">FAQ</a>
+      <a href="#contato" class="scroll-link">Contato</a>
+    </div>
+    <div class="footer-col">
+      <h3>CONTATO</h3>
+      <p>WhatsApp: (11) 99999-0000</p>
+      <p>contato@cyberedgegym.com.br</p>
+      <p style="margin-top:12px;font-size:.8rem;opacity:.6">Atendimento: Brasil — 100% remoto para diagnóstico e presencial para instalação.</p>
+      <p style="margin-top:12px;font-size:.75rem;opacity:.5">LGPD: dados usados apenas para retorno comercial.</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 CyberEdge Gym — Todos os direitos reservados.</span>
+    <span>POWERED BY EDGE COMPUTING</span>
+  </div>
+</footer>
+
+<!-- FLOATING CTA -->
+<div class="float-cta" id="fcta">
+  <a href="#contato" class="scroll-link"><span class="pulse"></span>SOLICITAR DEMO GRATUITA</a>
+</div>
+
+<!-- WA FAB -->
+<a href="https://wa.me/5511999990000" target="_blank" rel="noopener" class="wa-fab" aria-label="WhatsApp">
+  <svg viewBox="0 0 24 24" width="28" height="28" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<script>
+// ── LOADER ──
+(function(){
+  var lc=document.getElementById('lc'),lb=document.getElementById('lb'),n=0;
+  var iv=setInterval(function(){
+    n+=Math.random()*15+5;
+    if(n>=100){n=100;clearInterval(iv);setTimeout(function(){document.getElementById('loader').classList.add('hidden')},300)}
+    lc.textContent=Math.floor(n)+'%';
+    lb.style.width=n+'%';
+  },80);
+})();
+
+// ── CURSOR ──
+var cur=document.getElementById('cur'),ring=document.getElementById('cur-ring');
+document.addEventListener('mousemove',function(e){
+  cur.style.left=e.clientX+'px';cur.style.top=e.clientY+'px';
+  ring.style.left=e.clientX+'px';ring.style.top=e.clientY+'px';
+});
+document.querySelectorAll('a,button,.bento-card,.step-card,.testi-card').forEach(function(el){
+  el.addEventListener('mouseenter',function(){cur.style.width='20px';cur.style.height='20px';ring.style.width='60px';ring.style.height='60px'});
+  el.addEventListener('mouseleave',function(){cur.style.width='12px';cur.style.height='12px';ring.style.width='40px';ring.style.height='40px'});
+});
+
+// ── SCROLL PROGRESS ──
+var prog=document.getElementById('prog');
+window.addEventListener('scroll',function(){
+  var pct=(window.scrollY/(document.body.scrollHeight-window.innerHeight))*100;
+  prog.style.width=pct+'%';
+},{ passive:true });
+
+// ── HEADER SCROLL ──
+var hdr=document.getElementById('hdr');
+window.addEventListener('scroll',function(){hdr.classList.toggle('scrolled',window.scrollY>60)},{passive:true});
+
+// ── FLOAT CTA ──
+var fcta=document.getElementById('fcta');
+window.addEventListener('scroll',function(){fcta.classList.toggle('show',window.scrollY>400)},{passive:true});
+
+// ── SMOOTH SCROLL ──
+document.querySelectorAll('.scroll-link').forEach(function(a){
+  a.addEventListener('click',function(e){
+    var href=this.getAttribute('href');
+    if(href&&href.startsWith('#')){
+      e.preventDefault();
+      var el=document.querySelector(href);
+      if(el)el.scrollIntoView({behavior:'smooth'});
+      document.getElementById('mob-nav').classList.remove('open');
+    }
+  });
+});
+
+// ── HAMBURGER ──
+document.getElementById('ham').addEventListener('click',function(){
+  document.getElementById('mob-nav').classList.toggle('open');
+});
+document.querySelectorAll('.mob-close').forEach(function(a){
+  a.addEventListener('click',function(){document.getElementById('mob-nav').classList.remove('open')});
+});
+
+// ── REVEAL ON SCROLL ──
+var revEls=document.querySelectorAll('.reveal');
+var io=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target)}});
+},{threshold:.12});
+revEls.forEach(function(el){io.observe(el)});
+
+// ── SECTION INDICATOR ──
+var dots=document.querySelectorAll('.sec-dot');
+var sections=['inicio','sobre','solucao','servicos','metodo','contato'];
+dots.forEach(function(d){
+  d.addEventListener('click',function(){
+    var el=document.getElementById(this.dataset.s);
+    if(el)el.scrollIntoView({behavior:'smooth'});
+  });
+});
+window.addEventListener('scroll',function(){
+  var mid=window.scrollY+window.innerHeight/2;
+  sections.forEach(function(id,i){
+    var el=document.getElementById(id);
+    if(!el)return;
+    var top=el.offsetTop,bot=top+el.offsetHeight;
+    dots[i]&&dots[i].classList.toggle('active',mid>=top&&mid<bot);
+  });
+},{passive:true});
+
+// ── FORM ──
+document.getElementById('cform').addEventListener('submit',function(e){
+  e.preventDefault();
+  var n=document.getElementById('f-nome').value,t=document.getElementById('f-tel').value,m=document.getElementById('f-msg').value;
+  if(!n||!t||!m){alert('Preencha Nome, Telefone e a mensagem.');return;}
+  this.style.display='none';
+  document.getElementById('fsuccess').classList.add('show');
+});
+
+// ── HERO CANVAS — particle field ──
+(function(){
+  var c=document.getElementById('hero-canvas');
+  if(!c)return;
+  var ctx=c.getContext('2d');
+  var W,H,pts=[];
+  function resize(){W=c.width=c.offsetWidth;H=c.height=c.offsetHeight}
+  resize();window.addEventListener('resize',resize);
+  for(var i=0;i<120;i++){pts.push({x:Math.random()*2000,y:Math.random()*1200,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5})}
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(function(p){
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;
+      if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle='rgba(0,245,255,.5)';ctx.fill();
+    });
+    for(var i=0;i<pts.length;i++){
+      for(var j=i+1;j<pts.length;j++){
+        var dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
+        if(d<120){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);
+          ctx.strokeStyle='rgba(0,245,255,'+(1-d/120)*.15+')';ctx.stroke();}
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── CUBE 3D CANVAS ──
+(function(){
+  var c=document.getElementById('cube3d');
+  if(!c)return;
+  var ctx=c.getContext('2d');
+  var W=260,H=260,t=0;
+  var verts=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
+  var edges=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+  function proj(v,rx,ry){
+    var x=v[0],y=v[1],z=v[2];
+    var y2=y*Math.cos(rx)-z*Math.sin(rx),z2=y*Math.sin(rx)+z*Math.cos(rx);
+    var x2=x*Math.cos(ry)+z2*Math.sin(ry),z3=-x*Math.sin(ry)+z2*Math.cos(ry);
+    var scale=180/(z3+4);
+    return[x2*scale+W/2,y2*scale+H/2];
+  }
+  function drawCube(){
+    ctx.clearRect(0,0,W,H);
+    var rx=t*.4,ry=t*.6;
+    edges.forEach(function(e){
+      var a=proj(verts[e[0]],rx,ry),b=proj(verts[e[1]],rx,ry);
+      ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);
+      ctx.strokeStyle='rgba(0,245,255,.7)';ctx.lineWidth=1.5;ctx.stroke();
+    });
+    verts.forEach(function(v){
+      var p=proj(v,rx,ry);
+      ctx.beginPath();ctx.arc(p[0],p[1],3,0,Math.PI*2);
+      ctx.fillStyle='#00f5ff';ctx.fill();
+    });
+    t+=0.008;requestAnimationFrame(drawCube);
+  }
+  drawCube();
+})();
+</script>
+</body>
+</html>
