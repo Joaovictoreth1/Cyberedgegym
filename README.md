@@ -1,2 +1,2 @@
 # Cyberedgegym
-Projeto desenvolvido pra o senac empreenda
+Projeto desenvolvido pra o senac empreenda 2026
