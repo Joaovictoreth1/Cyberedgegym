@@ -1,0 +1,996 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR" class="bg-[#000000] text-white overflow-x-hidden selection:bg-cyan-400 selection:text-black">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+    <title>CyberEdge Gym — Infraestrutura Edge para Academias</title>
+    <meta name="description" content="Infraestrutura de TI completa para academias. Edge Computing com latência abaixo de 10ms, app white label, destravamento de catraca e suporte 24/7."/>
+    <meta name="keywords" content="infraestrutura TI academia, edge computing, app academia, catraca biométrica, rede academias"/>
+    <meta name="author" content="CyberEdge Gym"/>
+    <meta name="robots" content="index, follow"/>
+    <link rel="canonical" href="https://joaovictoreth1.github.io/Cyberedgegym/"/>
+
+    <!-- Open Graph (Facebook, LinkedIn, WhatsApp) -->
+    <meta property="og:type" content="website"/>
+    <meta property="og:url" content="https://joaovictoreth1.github.io/Cyberedgegym/"/>
+    <meta property="og:title" content="CyberEdge Gym — Infraestrutura Edge para Academias"/>
+    <meta property="og:description" content="Latência Zero. Edge Computing completo para a sua academia: redes, app white label, catraca biométrica e suporte 24/7."/>
+    <meta property="og:image" content="https://joaovictoreth1.github.io/Cyberedgegym/og-image.png"/>
+    <meta property="og:locale" content="pt_BR"/>
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image"/>
+    <meta name="twitter:title" content="CyberEdge Gym — Infraestrutura Edge para Academias"/>
+    <meta name="twitter:description" content="Latência Zero. Edge Computing completo para a sua academia."/>
+    <meta name="twitter:image" content="https://joaovictoreth1.github.io/Cyberedgegym/og-image.png"/>
+
+    <!-- Favicon (SVG inline para não precisar de arquivo externo) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23000'/><text y='.9em' font-size='90' x='5'>⚡</text></svg>"/>
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23000'/><text y='.9em' font-size='90' x='5'>⚡</text></svg>"/>
+
+    <!-- Theme Color (Chrome mobile address bar) -->
+    <meta name="theme-color" content="#000000"/>
+    
+    <!-- Preconnect & Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&family=Manrope:wght@200..800&family=Syncopate:wght@400;700&display=swap" rel="stylesheet"/>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        void: '#000000',
+                        surface: '#050508',
+                        panel: '#0a0a0f',
+                        cyan: { 400: '#00f0ff', 500: '#00c3ff' },
+                        magenta: { 400: '#ff003c', 500: '#d90033' }
+                    },
+                    fontFamily: {
+                        sync: ['Syncopate', 'sans-serif'],
+                        sans: ['Manrope', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    letterSpacing: {
+                        tighter: '-.04em',
+                        widest: '.25em',
+                        superwide: '.5em',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Libraries: Three.js for 3D, Tone.js for Sound, GSAP (removed, using custom math for performance) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-glow-cyan { text-shadow: 0 0 20px rgba(0, 240, 255, 0.4), 0 0 40px rgba(0, 240, 255, 0.1); }
+            .hide-scrollbar::-webkit-scrollbar { display: none; }
+            .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+            
+            /* High-performance reveals */
+            .reveal { opacity: 0; transform: translateY(40px); transition: all 1s cubic-bezier(0.16, 1, 0.3, 1); will-change: transform, opacity; }
+            .reveal.active { opacity: 1; transform: translateY(0); }
+            
+            .glass-panel {
+                background: rgba(10, 10, 15, 0.3);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border: 1px solid rgba(0, 240, 255, 0.1);
+            }
+
+            .text-outline {
+                -webkit-text-stroke: 1px rgba(255,255,255,0.1);
+                color: transparent;
+            }
+        }
+
+        body {
+            cursor: none; 
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: #000;
+        }
+
+        /* ── CRT & NOISE ── */
+        .noise {
+            position: fixed; inset: 0; z-index: 50; pointer-events: none; opacity: 0.04; mix-blend-mode: overlay;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+        .scanlines {
+            position: fixed; inset: 0; z-index: 49; pointer-events: none; opacity: 0.15;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,1) 50%, rgba(0,0,0,1));
+            background-size: 100% 4px;
+        }
+        .vignette {
+            position: fixed; inset: 0; z-index: 48; pointer-events: none;
+            background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.8) 100%);
+        }
+
+        /* ── GLITCH EFFECT ── */
+        .glitch { position: relative; }
+        .glitch::before, .glitch::after {
+            content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: transparent;
+        }
+        .glitch::before {
+            left: 2px; text-shadow: -1px 0 red; clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+        .glitch::after {
+            left: -2px; text-shadow: -1px 0 blue; clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim 2.5s infinite linear alternate-reverse;
+        }
+        @keyframes glitch-anim {
+            0% { clip: rect(3px, 9999px, 86px, 0); }
+            20% { clip: rect(65px, 9999px, 12px, 0); }
+            40% { clip: rect(104px, 9999px, 56px, 0); }
+            60% { clip: rect(14px, 9999px, 87px, 0); }
+            80% { clip: rect(98px, 9999px, 45px, 0); }
+            100% { clip: rect(34px, 9999px, 12px, 0); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip: rect(12px, 9999px, 45px, 0); }
+            20% { clip: rect(89px, 9999px, 23px, 0); }
+            40% { clip: rect(34px, 9999px, 78px, 0); }
+            60% { clip: rect(76px, 9999px, 12px, 0); }
+            80% { clip: rect(23px, 9999px, 90px, 0); }
+            100% { clip: rect(56px, 9999px, 34px, 0); }
+        }
+
+        /* ── CUSTOM CURSOR ── */
+        #cursor-dot {
+            position: fixed; top: 0; left: 0; width: 6px; height: 6px; background: #00f0ff; border-radius: 50%;
+            pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); box-shadow: 0 0 12px #00f0ff;
+        }
+        #cursor-ring {
+            position: fixed; top: 0; left: 0; width: 40px; height: 40px; border: 1px solid rgba(0, 240, 255, 0.4);
+            border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%, -50%);
+            transition: width 0.3s ease-out, height 0.3s ease-out, background 0.3s ease-out;
+            will-change: transform, width, height;
+        }
+
+        /* ── 3D SPOTLIGHT CARD ── */
+        .spotlight-card {
+            position: relative; border-radius: 2px; background: rgba(255,255,255,0.03);
+            transform-style: preserve-3d; perspective: 1000px;
+        }
+        .spotlight-card::before {
+            content: ""; position: absolute; inset: -1px; z-index: -1;
+            background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(0, 240, 255, 0.3), transparent 40%);
+            opacity: 0; transition: opacity 0.5s; border-radius: 2px;
+        }
+        .spotlight-card:hover::before { opacity: 1; }
+        .spotlight-inner {
+            background: #050508; height: calc(100% - 2px); width: calc(100% - 2px); margin: 1px;
+            position: relative; z-index: 1; border-radius: 1px; overflow: hidden;
+            transform: translateZ(20px); /* Creates the 3D pop effect */
+            transition: transform 0.1s ease-out;
+        }
+        .spotlight-content { transform: translateZ(40px); }
+
+        /* ── CANVAS BACKGROUND ── */
+        #webgl-container { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+
+        /* ── MARQUEE ── */
+        .marquee-wrapper { display: flex; width: max-content; animation: marquee 30s linear infinite; }
+        @keyframes marquee { to { transform: translateX(-50%); } }
+
+        /* ── TERMINAL FORM ── */
+        .term-input {
+            background: transparent; border: none; outline: none; color: #00f0ff;
+            width: 100%; padding: 8px 0; font-family: 'JetBrains Mono', monospace; font-size: 0.875rem;
+        }
+        .term-input::placeholder { color: rgba(255,255,255,0.2); }
+        .term-line { position: relative; border-bottom: 1px solid rgba(0,240,255,0.2); padding-left: 20px; transition: border-color 0.3s; }
+        .term-line::before { content: ">"; position: absolute; left: 0; top: 10px; color: #ff003c; font-family: monospace; }
+        .term-line:focus-within { border-bottom-color: #00f0ff; }
+        .term-line:focus-within::before { color: #00f0ff; animation: blink 1s step-end infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* ── LOADER WRAPPER ── */
+        #app-content { opacity: 0; animation: site-fade-in 1.5s ease-out forwards; }
+        @keyframes site-fade-in { to { opacity: 1; } }
+
+    </style>
+</head>
+<body class="antialiased font-sans text-gray-300">
+
+    <!-- OVERLAYS (CRT, Scanlines, Noise, Vignette) -->
+    <div class="noise"></div>
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+    <div id="webgl-container"></div>
+    
+    <!-- CURSOR -->
+    <div id="cursor-dot" class="hidden lg:block"></div>
+    <div id="cursor-ring" class="hidden lg:block"></div>
+
+    <!-- TERMINAL ANALYSIS OVERLAY (Triggers on Form Submit) -->
+    <div id="analysis-screen" class="fixed inset-0 bg-void/95 backdrop-blur-md z-[10000] flex flex-col items-center justify-center transition-all duration-700 opacity-0 pointer-events-none">
+        <div class="w-full max-w-3xl p-8 font-mono text-sm text-cyan-400">
+            <div class="flex items-center gap-4 mb-8 border-b border-cyan-400/20 pb-4">
+                <div class="w-2 h-2 bg-magenta-400 animate-pulse"></div>
+                <span class="tracking-widest">SYSTEM OVERRIDE // ALOCANDO ENGENHARIA</span>
+                <span id="analysis-pct" class="ml-auto text-white text-2xl font-bold">0%</span>
+            </div>
+            <div id="term-content" class="flex flex-col gap-2 h-64 overflow-hidden text-xs opacity-80"></div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION SYSTEM -->
+    <div id="sys-msg" class="fixed top-0 left-0 w-full p-3 transform -translate-y-full transition-transform duration-500 z-[9000] font-mono text-[10px] text-center tracking-widest uppercase shadow-[0_0_20px_rgba(0,240,255,0.3)]"></div>
+
+    <!-- MAIN APP -->
+    <div id="app-content" class="h-screen overflow-y-auto overflow-x-hidden relative z-10 scroll-smooth" role="main">
+        
+        <!-- HEADER -->
+        <header class="fixed w-full top-0 z-50 px-6 lg:px-12 py-6 mix-blend-difference flex justify-between items-center pointer-events-none">
+            <a href="#hero" class="magnetic sound-hover pointer-events-auto group">
+                <span class="font-sync font-bold tracking-widest text-xl text-white">
+                    CYBER<span class="text-cyan-400 transition-colors group-hover:text-magenta-400">EDGE</span>
+                </span>
+            </a>
+            
+            <nav class="hidden md:flex gap-12 font-mono text-[10px] tracking-superwide pointer-events-auto">
+                <a href="#about" class="text-gray-400 hover:text-white hover:text-glow-cyan transition-all sound-hover">01.THE_CORE</a>
+                <a href="#arch" class="text-gray-400 hover:text-white hover:text-glow-cyan transition-all sound-hover">02.SERVIÇOS</a>
+                <a href="#pricing" class="text-gray-400 hover:text-white hover:text-glow-cyan transition-all sound-hover">03.PLANOS</a>
+                <a href="#contact" class="text-cyan-400 hover:text-white transition-all sound-hover">04.DEPLOYMENT</a>
+            </nav>
+        </header>
+
+        <!-- HERO SECTION -->
+        <section id="hero" class="relative min-h-screen flex flex-col items-center justify-center px-6 pt-20">
+            
+            <!-- Massive BG Text -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full text-center pointer-events-none select-none z-0">
+                <h1 class="font-sync font-bold text-[25vw] leading-none text-outline opacity-20 whitespace-nowrap">LATENCY</h1>
+            </div>
+
+            <div class="text-center z-10 w-full max-w-7xl mx-auto flex flex-col items-center">
+                
+                <div class="reveal inline-flex items-center gap-3 px-4 py-1.5 border border-cyan-400/30 bg-cyan-400/5 backdrop-blur-md mb-12">
+                    <span class="w-1.5 h-1.5 bg-cyan-400 animate-ping"></span>
+                    <span class="font-mono text-[10px] tracking-widest text-cyan-400 uppercase">Edge Computing Protocol Active</span>
+                </div>
+
+                <!-- Glitch Typography -->
+                <h1 class="font-sync font-bold text-[12vw] md:text-[9vw] leading-[0.85] tracking-tighter text-white uppercase cursor-default mb-10 w-full text-center">
+                    <div class="overflow-hidden pb-4">
+                        <span class="block transform transition-transform duration-700 hover:scale-[1.02] glitch" data-text="THE EDGE">THE EDGE</span>
+                    </div>
+                    <div class="overflow-hidden">
+                        <span class="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-white to-magenta-400">IS HERE.</span>
+                    </div>
+                </h1>
+
+                <p class="reveal font-sans text-gray-400 text-lg md:text-2xl max-w-2xl font-light leading-relaxed mb-16">
+                    A nuvem é lenta. A nuvem falha. <br class="hidden md:block"/>
+                    Trouxemos o servidor <span class="text-white font-medium border-b border-cyan-400 pb-1">para dentro da sua academia.</span>
+                </p>
+
+                <div class="reveal">
+                    <button onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})" class="magnetic sound-click group relative px-12 py-5 font-mono text-[10px] tracking-superwide bg-white text-black font-bold overflow-hidden transition-colors duration-500 hover:text-white">
+                        <span class="relative z-10 flex items-center gap-4">
+                            INICIAR DEPLOY 
+                            <svg class="w-4 h-4 group-hover:translate-x-2 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                        </span>
+                        <div class="absolute inset-0 bg-cyan-500 transform scale-y-0 group-hover:scale-y-100 transition-transform duration-500 origin-bottom z-0"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scroll Indicator -->
+            <div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 opacity-50 hover:opacity-100 transition-opacity">
+                <span class="font-mono text-[9px] tracking-superwide text-white rotate-90 mb-8">DESCER</span>
+                <div class="w-px h-16 bg-gradient-to-b from-cyan-400 to-transparent"></div>
+            </div>
+        </section>
+
+        <!-- MARQUEE -->
+        <div class="w-full bg-void py-6 border-y border-white/5 relative z-20 overflow-hidden">
+            <div class="marquee-wrapper font-sync font-bold text-2xl md:text-4xl text-outline tracking-widest uppercase">
+                <div class="flex gap-12 px-6 items-center">
+                    <span>Zero Downtime</span> <span class="text-cyan-400 text-glow-cyan">*</span>
+                    <span>Latência &lt; 10ms</span> <span class="text-magenta-400">*</span>
+                    <span>Offline First</span> <span class="text-cyan-400 text-glow-cyan">*</span>
+                    <span>Hardware Dedicado</span> <span class="text-magenta-400">*</span>
+                    <span>Sincronia Global</span> <span class="text-cyan-400 text-glow-cyan">*</span>
+                    
+                    <!-- Clone for infinite scroll -->
+                    <span>Zero Downtime</span> <span class="text-cyan-400 text-glow-cyan">*</span>
+                    <span>Latência &lt; 10ms</span> <span class="text-magenta-400">*</span>
+                    <span>Offline First</span> <span class="text-cyan-400 text-glow-cyan">*</span>
+                    <span>Hardware Dedicado</span> <span class="text-magenta-400">*</span>
+                    <span>Sincronia Global</span> <span class="text-cyan-400 text-glow-cyan">*</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABOUT / THE PROBLEM -->
+        <section id="about" class="py-40 relative z-10 px-6 md:px-12">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-20 items-center">
+                
+                <div class="lg:col-span-7 flex flex-col gap-10">
+                    <div class="reveal">
+                        <span class="font-mono text-cyan-400 tracking-superwide text-[10px] mb-6 block">// 01_FALHA_SISTÊMICA</span>
+                        <h2 class="font-sync text-4xl md:text-6xl text-white leading-tight scramble-text" data-text="A NUVEM É O GARGALO.">
+                            A NUVEM É O GARGALO.
+                        </h2>
+                    </div>
+                    <p class="reveal font-sans text-xl text-gray-400 font-light leading-relaxed border-l border-magenta-400/50 pl-6">
+                        Depender de uma conexão externa para abrir uma catraca local é engenharia reversa. Se a operadora falhar, sua recepção entra em colapso. O processamento precisa nascer e morrer na borda.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                        <div class="glass-panel p-6 reveal sound-hover border-l-2 border-l-magenta-400">
+                            <h3 class="font-mono text-white text-xs tracking-widest mb-3">LATÊNCIA DE REDE</h3>
+                            <p class="text-gray-500 font-sans text-sm">3000km de viagem de dados apenas para checar uma digital. Resultado: Filas.</p>
+                        </div>
+                        <div class="glass-panel p-6 reveal sound-hover border-l-2 border-l-magenta-400 delay-100">
+                            <h3 class="font-mono text-white text-xs tracking-widest mb-3">SINAL CAIU</h3>
+                            <p class="text-gray-500 font-sans text-sm">Sem internet, os aplicativos dos alunos congelam. Treino perdido. Experiência arruinada.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Element -->
+                <div class="lg:col-span-5 relative h-full min-h-[400px] flex items-center justify-center">
+                    <div class="absolute inset-0 bg-magenta-400/10 blur-[100px] rounded-full"></div>
+                    <div class="relative z-10 glass-panel w-full aspect-square flex flex-col items-center justify-center p-8 border border-white/10 rotate-3 hover:rotate-0 transition-transform duration-500">
+                        <div class="font-sync text-8xl text-white mb-4 glitch" data-text="404">404</div>
+                        <div class="font-mono text-xs tracking-widest text-magenta-400">CONEXÃO_PERDIDA</div>
+                        <div class="mt-8 w-full bg-surface h-2 overflow-hidden">
+                            <div class="h-full bg-magenta-400 w-1/3 animate-pulse"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ARCHITECTURE (Bento Grid with 3D Tilt) -->
+        <section id="arch" class="py-40 relative z-10 px-6 md:px-12 bg-void/50 border-y border-white/5 backdrop-blur-sm">
+            <div class="max-w-7xl mx-auto">
+                <div class="mb-20 flex flex-col md:flex-row justify-between items-end gap-8">
+                    <div>
+                        <span class="reveal font-mono text-cyan-400 tracking-superwide text-[10px] block mb-6">// 02_INFRAESTRUTURA_DE_TI</span>
+                        <h2 class="font-sync text-5xl md:text-7xl text-white leading-[1] scramble-text" data-text="SERVIÇOS.">SERVIÇOS.</h2>
+                    </div>
+                    <p class="reveal font-sans text-gray-400 max-w-sm text-right hidden md:block">Oferecemos a infraestrutura de TI completa para sua academia. Do cabeamento ao app.</p>
+                </div>
+
+                <!-- Bento Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[350px]">
+                    
+                    <!-- Main Card (Span 2) -->
+                    <div class="spotlight-card md:col-span-2 reveal tilt-card sound-hover cursor-none">
+                        <div class="spotlight-inner p-10 flex flex-col justify-between">
+                            <div class="spotlight-content z-10">
+                                <span class="px-3 py-1 bg-cyan-400/10 text-cyan-400 border border-cyan-400/20 font-mono text-[9px] tracking-widest rounded-sm mb-6 inline-block">NÚCLEO FÍSICO & REDES</span>
+                                <h3 class="font-sync text-3xl md:text-4xl text-white mb-4">Infraestrutura de TI Completa.</h3>
+                                <p class="font-sans text-gray-400 max-w-md text-lg">Assumimos toda a TI da sua academia. Realizamos a configuração de redes avançadas, instalação de switches de alta performance e todo o cabeamento estruturado necessário para latência zero.</p>
+                            </div>
+                            <!-- Tech UI -->
+                            <div class="spotlight-content z-10 flex gap-4 font-mono text-[10px] mt-8">
+                                <div class="bg-black/50 border border-white/10 p-4 flex-1">
+                                    <span class="text-cyan-400 block mb-1">SWITCH_CORE</span>
+                                    <span class="text-white text-xl">10Gbps</span>
+                                </div>
+                                <div class="bg-black/50 border border-white/10 p-4 flex-1">
+                                    <span class="text-gray-500 block mb-1">CABEAMENTO</span>
+                                    <span class="text-cyan-400 text-xl">CAT6/CAT6A</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- App Card -->
+                    <div class="spotlight-card md:col-span-1 reveal delay-100 tilt-card sound-hover">
+                        <div class="spotlight-inner p-10 flex flex-col justify-between">
+                            <div class="spotlight-content z-10">
+                                <span class="font-mono text-cyan-400 tracking-widest text-[9px] mb-4 block">SOFTWARE HOUSE</span>
+                                <h3 class="font-sync text-2xl text-white mb-4 mt-8">Criação de Aplicativo</h3>
+                                <p class="font-sans text-gray-500 text-sm">Desenvolvemos o aplicativo oficial da sua academia (White Label). Treinos, pagamentos e acesso integrados em um só lugar.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Catraca Card -->
+                    <div class="spotlight-card md:col-span-1 reveal tilt-card sound-hover">
+                        <div class="spotlight-inner p-10 bg-gradient-to-br from-[#050508] to-[#100a15] flex flex-col justify-center">
+                            <div class="spotlight-content z-10">
+                                <div class="text-magenta-400 text-4xl mb-4 font-mono">
+                                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
+                                </div>
+                                <h3 class="font-sync text-xl text-white mb-2">Destravamento de Catraca</h3>
+                                <p class="font-sans text-gray-500 text-sm">Integramos e destravamos suas catracas atuais. Processamento biométrico local ultrarrápido para eliminar filas.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Support Card -->
+                    <div class="spotlight-card md:col-span-2 reveal delay-100 tilt-card sound-hover">
+                        <div class="spotlight-inner p-10 flex items-center gap-8 relative overflow-hidden">
+                            <div class="absolute right-0 top-0 w-64 h-full bg-cyan-400/5 blur-3xl"></div>
+                            <div class="spotlight-content z-10 w-full">
+                                <span class="font-mono text-cyan-400 tracking-widest text-[9px] mb-4 block">MONITORAMENTO CONTÍNUO</span>
+                                <div class="flex flex-col md:flex-row gap-8 items-center w-full">
+                                    <div class="flex-1">
+                                        <h3 class="font-sync text-3xl text-white mb-2">Suporte Técnico Edge</h3>
+                                        <p class="font-sans text-gray-500 text-sm">Não entregamos apenas equipamentos, entregamos parceria. Suporte técnico especializado monitorando seus switches, redes e sistemas 24 horas por dia.</p>
+                                    </div>
+                                    <div class="flex-1 w-full bg-black/50 border border-white/5 p-4 rounded text-center">
+                                        <div class="font-mono text-xs text-white mb-2">STATUS DE REDE</div>
+                                        <div class="w-full bg-surface h-1 mb-1"><div class="bg-cyan-400 h-full w-full"></div></div>
+                                        <div class="font-mono text-[9px] text-cyan-400">TICKETS ABERTOS: 0</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- PRICING SECTION -->
+        <section id="pricing" class="py-40 relative z-10 px-6 md:px-12 bg-void border-y border-white/5">
+            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,240,255,0.03)_0%,transparent_70%)] pointer-events-none"></div>
+            
+            <div class="max-w-7xl mx-auto relative z-10">
+                <div class="text-center mb-20">
+                    <span class="reveal inline-block font-mono text-magenta-400 tracking-superwide text-[10px] mb-6">// 03_INVESTIMENTO</span>
+                    <h2 class="reveal font-sync text-5xl md:text-6xl text-white leading-[1]">PLANOS DE EXPANSÃO</h2>
+                    <p class="reveal font-sans text-gray-400 mt-6 max-w-2xl mx-auto">Infraestrutura TI, cabeamento, app e suporte inclusos. Escolha o plano que se adequa ao volume da sua academia.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    
+                    <!-- PLAN 1 -->
+                    <div class="spotlight-card reveal tilt-card sound-hover">
+                        <div class="spotlight-inner p-8 flex flex-col h-full bg-panel/80">
+                            <div class="spotlight-content z-10 flex-grow">
+                                <span class="text-gray-400 font-mono text-[10px] tracking-widest">TIER 01 // SMALL</span>
+                                <h3 class="font-sync text-2xl text-white mt-4 mb-2">START</h3>
+                                <p class="text-cyan-400 font-mono text-xs mb-8">Até 500 alunos</p>
+                                
+                                <div class="mb-8 border-b border-white/10 pb-8">
+                                    <span class="text-4xl text-white font-sync font-bold">R$ 1.000</span>
+                                    <span class="text-gray-500 font-mono text-[10px] tracking-widest"> / TRIMESTRE</span>
+                                </div>
+                                
+                                <ul class="space-y-4 font-mono text-[10px] text-gray-400 tracking-wider">
+                                    <li class="flex items-start gap-3"><span class="text-cyan-400 mt-0.5">✓</span> Infraestrutura de Redes</li>
+                                    <li class="flex items-start gap-3"><span class="text-cyan-400 mt-0.5">✓</span> Criação de App Básico</li>
+                                    <li class="flex items-start gap-3"><span class="text-cyan-400 mt-0.5">✓</span> Destravamento de Catraca</li>
+                                    <li class="flex items-start gap-3"><span class="text-cyan-400 mt-0.5">✓</span> Suporte Técnico Padrão</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PLAN 2 -->
+                    <div class="spotlight-card reveal delay-100 tilt-card sound-hover relative transform lg:-translate-y-4">
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyan-400 text-black font-mono text-[9px] tracking-widest px-4 py-1 z-20 font-bold rounded-sm shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+                            MAIS ESCOLHIDO
+                        </div>
+                        <div class="spotlight-inner p-8 flex flex-col h-full bg-gradient-to-b from-[#0a0f15] to-panel border-t border-cyan-400/30">
+                            <div class="spotlight-content z-10 flex-grow">
+                                <span class="text-cyan-400 font-mono text-[10px] tracking-widest">TIER 02 // MEDIUM</span>
+                                <h3 class="font-sync text-2xl text-white mt-4 mb-2">PRO</h3>
+                                <p class="text-cyan-400 font-mono text-xs mb-8">501 a 1.000 alunos</p>
+                                
+                                <div class="mb-8 border-b border-cyan-400/20 pb-8">
+                                    <span class="text-4xl text-white font-sync font-bold">R$ 2.000</span>
+                                    <span class="text-gray-500 font-mono text-[10px] tracking-widest"> / TRIMESTRE</span>
+                                </div>
+                                
+                                <ul class="space-y-4 font-mono text-[10px] text-gray-300 tracking-wider">
+                                    <li class="flex items-start gap-3"><span class="text-cyan-400 mt-0.5">✓</span> Tudo do plano Start</li>
+                                    <li class="flex items-start gap-3"><span class="text-cyan-400 mt-0.5">✓</span> Cabeamento Estruturado</li>
+                                    <li class="flex items-start gap-3"><span class="text-cyan-400 mt-0.5">✓</span> App Personalizado Avançado</li>
+                                    <li class="flex items-start gap-3"><span class="text-cyan-400 mt-0.5">✓</span> Switches de Alta Performance</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PLAN 3 -->
+                    <div class="spotlight-card reveal delay-200 tilt-card sound-hover">
+                        <div class="spotlight-inner p-8 flex flex-col h-full bg-panel/80">
+                            <div class="spotlight-content z-10 flex-grow">
+                                <span class="text-magenta-400 font-mono text-[10px] tracking-widest">TIER 03 // LARGE</span>
+                                <h3 class="font-sync text-2xl text-white mt-4 mb-2">ENTERPRISE</h3>
+                                <p class="text-magenta-400 font-mono text-xs mb-8">Acima de 1.000 alunos</p>
+                                
+                                <div class="mb-8 border-b border-white/10 pb-8">
+                                    <span class="text-4xl text-white font-sync font-bold">R$ 3.000</span>
+                                    <span class="text-gray-500 font-mono text-[10px] tracking-widest"> / BIMESTRE</span>
+                                </div>
+                                
+                                <ul class="space-y-4 font-mono text-[10px] text-gray-400 tracking-wider">
+                                    <li class="flex items-start gap-3"><span class="text-magenta-400 mt-0.5">✓</span> A Experiência Suprema (Melhor Plano)</li>
+                                    <li class="flex items-start gap-3"><span class="text-magenta-400 mt-0.5">✓</span> Arquitetura Multi-Unidades</li>
+                                    <li class="flex items-start gap-3"><span class="text-magenta-400 mt-0.5">✓</span> Edge Server Dedicado Premium</li>
+                                    <li class="flex items-start gap-3"><span class="text-magenta-400 mt-0.5">✓</span> Suporte VIP 24/7 (SLA < 2h)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- FORM / TERMINAL SECTION -->
+        <section id="contact" class="py-40 relative z-10 px-6 md:px-12">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20">
+                
+                <div>
+                    <span class="reveal font-mono text-cyan-400 tracking-superwide text-[10px] block mb-6">// 04_INIT_DEPLOYMENT</span>
+                    <h2 class="reveal font-sync text-4xl md:text-5xl text-white mb-6">ESTABELECER<br>CONEXÃO</h2>
+                    <p class="reveal font-sans text-gray-400 mb-8 max-w-sm">Conecte-se com nossa engenharia. Desenvolveremos o plano diretor da sua infraestrutura em 24 horas.</p>
+                    <ul class="reveal space-y-4 font-mono text-[10px] text-gray-500 tracking-widest">
+                        <li class="flex items-center gap-4"><div class="w-1 h-1 bg-cyan-400"></div> SETUP ZERO DOWNTIME</li>
+                        <li class="flex items-center gap-4"><div class="w-1 h-1 bg-cyan-400"></div> DIAGNÓSTICO DE REDE GRÁTIS</li>
+                        <li class="flex items-center gap-4"><div class="w-1 h-1 bg-cyan-400"></div> MIGRAÇÃO DE DADOS INCLUSA</li>
+                    </ul>
+                </div>
+                
+                <!-- Terminal Form -->
+                <div class="reveal glass-panel p-8 relative">
+                    <!-- Decorators -->
+                    <div class="absolute top-0 left-0 w-4 h-px bg-cyan-400"></div>
+                    <div class="absolute top-0 left-0 w-px h-4 bg-cyan-400"></div>
+                    <div class="absolute bottom-0 right-0 w-4 h-px bg-cyan-400"></div>
+                    <div class="absolute bottom-0 right-0 w-px h-4 bg-cyan-400"></div>
+                    
+                    <form id="edge-form" class="space-y-6 flex flex-col h-full justify-center relative z-10">
+                        <div class="term-line sound-type">
+                            <input type="text" class="term-input" placeholder="NOME_DO_GESTOR" required />
+                        </div>
+                        <div class="term-line sound-type">
+                            <input type="text" class="term-input" placeholder="NOME_DA_ACADEMIA" required />
+                        </div>
+                        <div class="term-line sound-type">
+                            <input type="tel" class="term-input" placeholder="WHATSAPP" required />
+                        </div>
+                        <div class="term-line sound-type">
+                            <select class="term-input" required style="appearance: none; background-color: transparent;">
+                                <option value="" disabled selected>SELECIONE_O_TIER</option>
+                                <option value="start" class="bg-surface">TIER 01 - START (Até 500 alunos) — R$ 1.000/trimestre</option>
+                                <option value="pro" class="bg-surface">TIER 02 - PRO (501 a 1.000 alunos) — R$ 2.000/trimestre</option>
+                                <option value="enterprise" class="bg-surface">TIER 03 - ENTERPRISE (Acima de 1.000) — R$ 3.000/bimestre</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="mt-8 sound-click magnetic w-full py-4 font-mono text-[10px] tracking-superwide bg-cyan-400 text-black font-bold hover:bg-white hover:text-black transition-colors duration-300">
+                            EXECUTAR DEPLOY
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="py-12 border-t border-white/5 relative z-10 bg-void">
+            <div class="max-w-7xl mx-auto px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="font-sync font-bold tracking-widest text-lg text-white">
+                    CYBER<span class="text-cyan-400">EDGE</span>
+                </div>
+                <div class="font-mono text-[9px] text-gray-600 tracking-superwide text-center md:text-right">
+                    © 2026 CYBEREDGE GYM.<br>
+                    INFRAESTRUTURA EDGE PARA ALTA PERFORMANCE.
+                </div>
+            </div>
+        </footer>
+
+    </div> <!-- End of app-content -->
+
+    <script>
+        // --- 1. AUDIO SYSTEM (Tone.js) ---
+        let audioInit = false;
+        
+        // Synth for hover events
+        const synthHover = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: "sine" },
+            envelope: { attack: 0.05, decay: 0.1, sustain: 0.1, release: 1 }
+        }).toDestination();
+        synthHover.volume.value = -15;
+
+        // Synth for clicks
+        const synthClick = new Tone.MembraneSynth().toDestination();
+        synthClick.volume.value = -20;
+
+        // Synth for typing in terminal
+        const synthType = new Tone.NoiseSynth({
+            noise: { type: "white" },
+            envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.05 }
+        }).toDestination();
+        synthType.volume.value = -35;
+
+        // Synth for Boot sequence
+        const synthBoot = new Tone.FMSynth({
+            harmonicity: 0.5, modulationIndex: 10, oscillator: { type: "sawtooth" },
+            envelope: { attack: 0.1, decay: 2, sustain: 0.5, release: 2 },
+            modulation: { type: "square" }, modulationEnvelope: { attack: 0.5, decay: 0, sustain: 1, release: 0.5 }
+        }).toDestination();
+        synthBoot.volume.value = -25;
+
+        // Init Audio Context on first user interaction
+        document.body.addEventListener('pointerdown', async () => {
+            if (!audioInit) {
+                await Tone.start();
+                audioInit = true;
+            }
+        }, { once: true });
+
+        // Bind Audio Events
+        document.querySelectorAll('.sound-hover').forEach(el => {
+            el.addEventListener('mouseenter', () => { if(audioInit) synthHover.triggerAttackRelease(["C5", "E5"], "32n"); });
+        });
+        document.querySelectorAll('.sound-click').forEach(el => {
+            el.addEventListener('mousedown', () => { if(audioInit) synthClick.triggerAttackRelease("C2", "16n"); });
+        });
+        document.querySelectorAll('.sound-type input, .sound-type select').forEach(el => {
+            el.addEventListener('input', () => { if(audioInit) synthType.triggerAttackRelease("64n"); });
+        });
+
+
+        // --- 2. NOTIFICATION SYSTEM ---
+        const sysMsg = document.getElementById('sys-msg');
+        function showMsg(text, type = 'error') {
+            sysMsg.innerText = text;
+            sysMsg.className = `fixed top-0 left-0 w-full p-3 transform transition-transform duration-500 z-[9000] font-mono text-[10px] text-center tracking-widest uppercase ${
+                type === 'error' ? 'bg-magenta-400 text-white shadow-[0_0_20px_rgba(255,0,60,0.3)]' : 'bg-cyan-400 text-black shadow-[0_0_20px_rgba(0,240,255,0.3)]'
+            }`;
+            requestAnimationFrame(() => sysMsg.classList.remove('-translate-y-full'));
+            if(audioInit) {
+                type === 'error' ? synthClick.triggerAttackRelease("C1", "8n") : synthHover.triggerAttackRelease(["C6", "E6", "G6"], "8n");
+            }
+            setTimeout(() => sysMsg.classList.add('-translate-y-full'), 3000);
+        }
+
+
+        // --- 3. THREE.JS IMMERSIVE DATA TUNNEL ---
+        const container = document.getElementById('webgl-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x000000, 0.002);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 3000);
+        camera.position.z = 1000;
+
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // Tunnel Geometry (Instanced points for performance)
+        const particleCount = 6000;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        const sizes = new Float32Array(particleCount);
+
+        for(let i=0; i < particleCount; i++) {
+            // Cylindrical placement
+            const radius = 300 + Math.random() * 200; // Radius of tunnel
+            const theta = Math.random() * Math.PI * 2; // Angle
+            const z = (Math.random() - 0.5) * 4000; // Depth spread
+
+            positions[i * 3] = radius * Math.cos(theta); // x
+            positions[i * 3 + 1] = radius * Math.sin(theta); // y
+            positions[i * 3 + 2] = z; // z
+
+            sizes[i] = Math.random() * 2;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+        // Custom Shader Material for glowing dots
+        const material = new THREE.PointsMaterial({
+            color: 0x00f0ff,
+            size: 2,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+
+        const tunnel = new THREE.Points(geometry, material);
+        scene.add(tunnel);
+
+        // Core Node in the center
+        const coreGeo = new THREE.IcosahedronGeometry(40, 2);
+        const coreMat = new THREE.MeshBasicMaterial({ color: 0xff003c, wireframe: true, transparent: true, opacity: 0.5 });
+        const core = new THREE.Mesh(coreGeo, coreMat);
+        core.position.z = 200;
+        scene.add(core);
+
+        // Mouse & Scroll Tracking
+        let mouseX = 0; let mouseY = 0;
+        let targetX = 0; let targetY = 0;
+        let scrollY = 0; let targetScrollZ = 0;
+        const windowHalfX = window.innerWidth / 2;
+        const windowHalfY = window.innerHeight / 2;
+        const appContent = document.getElementById('app-content');
+
+        if(window.innerWidth > 768) {
+            document.addEventListener('mousemove', (e) => {
+                mouseX = (e.clientX - windowHalfX);
+                mouseY = (e.clientY - windowHalfY);
+            });
+        }
+
+        appContent.addEventListener('scroll', () => {
+            scrollY = appContent.scrollTop;
+            targetScrollZ = 1000 - (scrollY * 0.5); // Move forward as you scroll down
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Animation Loop
+        const clock = new THREE.Clock();
+        function animateThree() {
+            requestAnimationFrame(animateThree);
+            const time = clock.getElapsedTime();
+
+            // Rotate Tunnel
+            tunnel.rotation.z = time * 0.05;
+            core.rotation.y = time * 0.2;
+            core.rotation.x = time * 0.1;
+
+            // Smooth Camera Parallax (Lerp)
+            targetX = mouseX * 0.15;
+            targetY = mouseY * 0.15;
+            camera.position.x += (targetX - camera.position.x) * 0.05;
+            camera.position.y += (-targetY - camera.position.y) * 0.05;
+            
+            // Camera Fly-through
+            camera.position.z += (targetScrollZ - camera.position.z) * 0.05;
+            
+            camera.lookAt(0, 0, camera.position.z - 500); // Always look forward
+
+            renderer.render(scene, camera);
+        }
+        animateThree();
+
+
+        // --- 4. ADVANCED PHYSICS CURSOR & MAGNETIC BTNS ---
+        const curDot = document.getElementById('cursor-dot');
+        const curRing = document.getElementById('cursor-ring');
+        let cx = windowHalfX, cy = windowHalfY;
+        let rx = cx, ry = cy; // Ring positions for Lerp
+
+        if (window.innerWidth > 768) {
+            document.addEventListener('mousemove', (e) => {
+                cx = e.clientX; cy = e.clientY;
+                curDot.style.transform = `translate(calc(${cx}px - 50%), calc(${cy}px - 50%))`;
+            });
+
+            function renderCursor() {
+                // Lerp formula for smooth follow
+                rx += (cx - rx) * 0.15;
+                ry += (cy - ry) * 0.15;
+                curRing.style.transform = `translate(calc(${rx}px - 50%), calc(${ry}px - 50%))`;
+                requestAnimationFrame(renderCursor);
+            }
+            requestAnimationFrame(renderCursor);
+
+            // Magnetic Logic
+            document.querySelectorAll('.magnetic').forEach(el => {
+                el.addEventListener('mousemove', (e) => {
+                    const rect = el.getBoundingClientRect();
+                    const elCx = rect.left + rect.width / 2;
+                    const elCy = rect.top + rect.height / 2;
+                    // Move button
+                    el.style.transform = `translate(${(e.clientX - elCx) * 0.2}px, ${(e.clientY - elCy) * 0.2}px)`;
+                    
+                    // Expand Cursor
+                    curRing.style.width = '60px'; curRing.style.height = '60px';
+                    curRing.style.backgroundColor = 'rgba(0, 240, 255, 0.1)';
+                });
+                el.addEventListener('mouseleave', () => {
+                    el.style.transform = 'translate(0px, 0px)';
+                    el.style.transition = 'transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)';
+                    curRing.style.width = '40px'; curRing.style.height = '40px';
+                    curRing.style.backgroundColor = 'transparent';
+                    setTimeout(() => { el.style.transition = ''; }, 500);
+                });
+            });
+        }
+
+
+        // --- 5. 3D TILT CARDS & SPOTLIGHT ---
+        document.querySelectorAll('.spotlight-card').forEach(card => {
+            const inner = card.querySelector('.spotlight-inner');
+            
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                // Spotlight glow
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+
+                // 3D Tilt Logic
+                if(card.classList.contains('tilt-card')) {
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = ((y - centerY) / centerY) * -10; // Max 10 deg
+                    const rotateY = ((x - centerX) / centerX) * 10;
+                    
+                    inner.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+                }
+            });
+
+            card.addEventListener('mouseleave', () => {
+                if(card.classList.contains('tilt-card')) {
+                    inner.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+                    inner.style.transition = 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+                    setTimeout(() => { inner.style.transition = 'transform 0.1s ease-out'; }, 500);
+                }
+            });
+        });
+
+
+        // --- 6. SCROLL OBSERVERS (Reveals & Scramble) ---
+        // Reveal elements
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1, root: appContent });
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        // Scramble Text Effect
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!<>-_\\/[]{}—=+*^?#_";
+        const scrambleObs = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const el = entry.target;
+                    const original = el.getAttribute('data-text');
+                    let iter = 0;
+                    clearInterval(el.dataset.interval);
+                    
+                    el.dataset.interval = setInterval(() => {
+                        el.innerText = original.split("").map((l, i) => {
+                            if(i < iter) return original[i];
+                            if(l === " " || l === ".") return l;
+                            return chars[Math.floor(Math.random() * chars.length)];
+                        }).join("");
+                        
+                        if(iter >= original.length) clearInterval(el.dataset.interval);
+                        iter += 1/3;
+                    }, 30);
+                    scrambleObs.unobserve(el);
+                }
+            });
+        }, { threshold: 0.5, root: appContent });
+        document.querySelectorAll('.scramble-text').forEach(el => scrambleObs.observe(el));
+
+
+        // --- 7. TERMINAL SUBMIT SEQUENCE ---
+        const form = document.getElementById('edge-form');
+        const analysisScreen = document.getElementById('analysis-screen');
+        const termContent = document.getElementById('term-content');
+        const analysisPct = document.getElementById('analysis-pct');
+
+        // ⚠️  Troque pela URL real do backend em produção
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:8000'
+            : 'https://cyberedge-api.railway.app'; // ← substitua pela URL do Railway/Render
+
+        const analysisLogs = [
+            "ESTABELECENDO CONEXÃO SEGURA (AES-256)...",
+            "VERIFICANDO LATÊNCIA DA REGIÃO ALVO... [OK]",
+            "CALCULANDO VOLUME DE DADOS EDGE...",
+            "ALOCANDO NÓS DE PROCESSAMENTO...",
+            "GERANDO TOPOLOGIA DE REDE LOCAL...",
+            "ENGENHARIA NOTIFICADA.",
+            "DEPLOYMENT AUTORIZADO."
+        ];
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const inputs = form.querySelectorAll('input, select');
+            let valid = true;
+            inputs.forEach(i => { if(!i.value.trim()) valid = false; });
+
+            if(!valid) {
+                showMsg("FALHA: PARÂMETROS OBRIGATÓRIOS AUSENTES.", "error");
+                return;
+            }
+
+            // Coleta os dados do formulário
+            const formData = {
+                nome:     form.querySelector('input[type="text"]:nth-of-type(1)') 
+                            ? form.querySelectorAll('input[type="text"]')[0].value 
+                            : '',
+                academia: form.querySelectorAll('input[type="text"]')[1]?.value || '',
+                whatsapp: form.querySelector('input[type="tel"]')?.value || '',
+                tier:     form.querySelector('select')?.value || '',
+            };
+
+            // Start Immersive Terminal Analysis
+            analysisScreen.classList.remove('opacity-0', 'pointer-events-none');
+            if(audioInit) synthBoot.triggerAttackRelease("C2", "2n");
+            
+            termContent.innerHTML = '';
+            let logIdx = 0;
+            let pct = 0;
+
+            const bootInterval = setInterval(() => {
+                pct += Math.floor(Math.random() * 12) + 1;
+                if(pct > 100) pct = 100;
+                analysisPct.innerText = pct + "%";
+
+                if (logIdx < analysisLogs.length && Math.random() > 0.3) {
+                    const line = document.createElement('div');
+                    line.innerText = `root@deploy:~# ${analysisLogs[logIdx]}`;
+                    termContent.appendChild(line);
+                    termContent.scrollTop = termContent.scrollHeight;
+                    if(audioInit) synthType.triggerAttackRelease("32n"); 
+                    logIdx++;
+                }
+
+                if (pct === 100) {
+                    clearInterval(bootInterval);
+                }
+            }, 100);
+
+            // Envio real para a API
+            try {
+                const response = await fetch(`${API_URL}/api/contato`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData),
+                });
+
+                // Aguarda animação terminar
+                await new Promise(r => setTimeout(r, 1800));
+                analysisScreen.classList.add('opacity-0', 'pointer-events-none');
+
+                if (response.ok) {
+                    if(audioInit) synthClick.triggerAttackRelease("C4", "8n");
+                    form.reset();
+                    showMsg("DADOS TRANSMITIDOS. ENGENHARIA A CAMINHO.", "success");
+                } else {
+                    const err = await response.json();
+                    const msg = err?.detail?.[0]?.msg || "Erro ao processar dados.";
+                    showMsg(`FALHA: ${msg.toUpperCase()}`, "error");
+                }
+            } catch (networkError) {
+                // Backend offline — salva localmente como fallback
+                console.warn("[CyberEdge] Backend offline. Dados salvos localmente:", formData);
+                const pending = JSON.parse(localStorage.getItem('cyberedge_pending') || '[]');
+                pending.push({ ...formData, timestamp: new Date().toISOString() });
+                localStorage.setItem('cyberedge_pending', JSON.stringify(pending));
+
+                await new Promise(r => setTimeout(r, 1800));
+                analysisScreen.classList.add('opacity-0', 'pointer-events-none');
+                form.reset();
+                showMsg("DADOS RECEBIDOS. SINCRONIZAÇÃO PENDENTE.", "success");
+            }
+        });
+
+    </script>
+</body>
+</html>
