@@ -892,10 +892,9 @@
         const termContent = document.getElementById('term-content');
         const analysisPct = document.getElementById('analysis-pct');
 
-        // ⚠️  Troque pela URL real do backend em produção
         const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? 'http://localhost:8000'
-            : 'https://cyberedge-api.railway.app'; // ← substitua pela URL do Railway/Render
+            : 'https://cyberedge-api.onrender.com';
 
         const analysisLogs = [
             "ESTABELECENDO CONEXÃO SEGURA (AES-256)...",

@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: cyberedge-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        value: cyberedge.db
+      - key: ALLOWED_ORIGINS
+        value: https://joaovictoreth1.github.io

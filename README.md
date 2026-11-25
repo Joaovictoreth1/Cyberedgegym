@@ -20,10 +20,13 @@
 ```
 Cyberedgegym/
 ├── index.html          # Landing page (SPA, HTML/CSS/JS puro)
-├── backend/            # API REST (FastAPI Python) [em desenvolvimento]
+├── backend/            # API REST (FastAPI Python)
 │   ├── main.py
 │   ├── requirements.txt
+│   ├── Procfile        # Comando de start (Railway/Heroku)
+│   ├── railway.json    # Config alternativa para Railway
 │   └── .env.example
+├── render.yaml         # Blueprint de deploy no Render
 ├── .github/
 │   └── workflows/
 │       └── ci.yml      # GitHub Actions CI
@@ -45,7 +48,7 @@ cd Cyberedgegym
 npx serve .   # Se tiver Node.js instalado
 ```
 
-## Rodando o Backend (em breve)
+## Rodando o Backend
 
 ```bash
 cd backend
@@ -63,7 +66,21 @@ Documentação automática: `http://localhost:8000/docs`
 | Componente | Plataforma | URL |
 |-----------|-----------|-----|
 | Frontend | GitHub Pages | https://joaovictoreth1.github.io/Cyberedgegym/ |
-| Backend | Railway / Render | em breve |
+| Backend | Render (free) | https://cyberedge-api.onrender.com |
+
+### Backend no Render
+
+O serviço `cyberedge-api` é configurado por `render.yaml` (Root Directory `backend`) e faz deploy automático a cada push na `main`.
+
+Variáveis de ambiente:
+
+| Variável | Valor em produção |
+|----------|-------------------|
+| `PYTHON_VERSION` | `3.12.7` |
+| `ALLOWED_ORIGINS` | `https://joaovictoreth1.github.io` |
+| `DATABASE_URL` | `cyberedge.db` |
+
+> ⚠️ No plano free o disco é efêmero: o SQLite é apagado a cada deploy/reinício, e o serviço hiberna após 15 min sem tráfego (a primeira requisição demora ~1 min). Para persistir os leads, use um Render Disk (aponte `DATABASE_URL` para o disco, ex.: `/var/data/cyberedge.db`) ou migre para Postgres.
 
 ## Planos de Serviço
 
