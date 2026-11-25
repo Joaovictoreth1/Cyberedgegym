@@ -3,7 +3,7 @@ CyberEdge Gym — Backend API
 FastAPI REST API para recebimento e gestão de leads
 """
 
-from __future__ import annotations
+from __future__ import annotations12
 
 import os
 import re
