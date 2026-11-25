@@ -18,10 +18,14 @@ from pydantic import BaseModel, field_validator
 # ── Configuração ─────────────────────────────────────────────────────
 DATABASE_URL: str = os.getenv("DATABASE_URL", "cyberedge.db")
 
-ALLOWED_ORIGINS: list[str] = os.getenv(
-    "ALLOWED_ORIGINS",
-    "http://localhost:3000,http://localhost:5173,https://joaovictoreth1.github.io",
-).split(",")
+ALLOWED_ORIGINS: list[str] = [
+    origin.strip()
+    for origin in os.getenv(
+        "ALLOWED_ORIGINS",
+        "http://localhost:3000,http://localhost:5173,https://joaovictoreth1.github.io",
+    ).split(",")
+    if origin.strip()
+]
 
 
 # ── Database ──────────────────────────────────────────────────────────
@@ -36,6 +40,9 @@ def _connect() -> sqlite3.Connection:
     """
     if DATABASE_URL.startswith("file:"):
         return sqlite3.connect(DATABASE_URL, uri=True, check_same_thread=False)
+    db_dir = os.path.dirname(DATABASE_URL)
+    if db_dir:
+        os.makedirs(db_dir, exist_ok=True)
     return sqlite3.connect(DATABASE_URL, check_same_thread=False)
 
 
