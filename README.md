@@ -53,6 +53,11 @@ ambiente do backend e configure o cabeçalho `X-API-Key` no cliente administrati
 Nunca coloque a chave no HTML, no JavaScript ou no Git. A URL pública do backend
 está no atributo `data-api-url` do formulário em `index.html`.
 
+Os botões de consulta dos planos preenchem o plano de interesse sem enviar
+dados. O formulário mantém os campos em caso de falha e só confirma o envio
+quando a API responde com HTTP 201. O site não grava os dados do formulário no
+armazenamento do navegador.
+
 | Rota | Comportamento |
 |---|---|
 | `GET /` | Sondagem pública: `200` se a tabela SQLite estiver acessível; `503` em falha do banco. |

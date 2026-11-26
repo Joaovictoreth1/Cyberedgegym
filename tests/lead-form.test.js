@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { apiBaseUrl, submitLead } from "../lead-form.js";
+import { apiBaseUrl, submitLead, validateLead } from "../lead-form.js";
 
 const renderUrl = "https://cyberedge-api.onrender.com";
 
@@ -57,4 +57,35 @@ test("does not confirm validation errors, proxy errors, or network failure", asy
     assert.equal(await submitLead(renderUrl, fields, async () => {
         throw new TypeError("Failed to fetch");
     }), "unavailable");
+});
+
+test("reports field-specific errors for names, WhatsApp and plan", () => {
+    const fields = leadFields();
+    fields.set("nome", " X ");
+    fields.set("academia", "á".repeat(121));
+    fields.set("whatsapp", "(11) telefone");
+    fields.set("tier", "not-a-plan");
+    assert.deepEqual(Object.keys(validateLead(fields).errors), ["nome", "academia", "whatsapp", "tier"]);
+});
+
+test("accepts Unicode names, country codes and normalized plans", () => {
+    const fields = leadFields();
+    fields.set("nome", " José de Sá ");
+    fields.set("whatsapp", "+55 (11) 99999-0000");
+    fields.set("tier", " PRO ");
+    assert.deepEqual(validateLead(fields), {
+        payload: { nome: "José de Sá", academia: "Academia Teste", whatsapp: "+55 (11) 99999-0000", tier: "pro" },
+        errors: {},
+    });
+});
+
+test("does not send malformed phone numbers or file-valued fields", async () => {
+    const fields = leadFields();
+    for (const phone of ["123456789", "12345678901234", "11+99999-0000", "11 99999-0000 ramal 3"]) {
+        fields.set("whatsapp", phone);
+        assert.equal(await submitLead(renderUrl, fields, async () => assert.fail("Unexpected request")), "invalid");
+    }
+    fields.set("whatsapp", "11999990000");
+    fields.set("academia", new Blob(["unexpected input"]), "academy.txt");
+    assert.equal(await submitLead(renderUrl, fields, async () => assert.fail("Unexpected request")), "invalid");
 });

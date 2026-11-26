@@ -1,8 +1,16 @@
 const leadFields = ["nome", "academia", "whatsapp", "tier"];
+const plans = new Set(["start", "pro", "enterprise"]);
+const fieldMessages = {
+    nome: "Informe seu nome (entre 2 e 120 caracteres).",
+    academia: "Informe o nome da academia (entre 2 e 120 caracteres).",
+    whatsapp: "Informe um número com DDD, de 10 a 13 dígitos.",
+    tier: "Selecione um dos planos disponíveis.",
+};
 const messages = {
-    sent: "DADOS TRANSMITIDOS. ENGENHARIA A CAMINHO.",
-    invalid: "REVISE OS DADOS DO FORMULÁRIO E TENTE NOVAMENTE.",
-    unavailable: "NÃO FOI POSSÍVEL CONFIRMAR O ENVIO. TENTE NOVAMENTE MAIS TARDE.",
+    sending: "Enviando solicitação. A primeira resposta do servidor pode demorar.",
+    sent: "Solicitação recebida. Nossa equipe entrará em contato pelo WhatsApp informado.",
+    invalid: "Revise os dados do formulário e tente novamente.",
+    unavailable: "Não foi possível confirmar o envio. Seus dados continuam no formulário para uma nova tentativa.",
 };
 
 export function apiBaseUrl(hostname, configuredUrl) {
@@ -11,11 +19,30 @@ export function apiBaseUrl(hostname, configuredUrl) {
         : configuredUrl.replace(/\/+$/, "");
 }
 
-export async function submitLead(baseUrl, fields, fetchImpl = fetch) {
+export function validateLead(fields) {
     const payload = Object.fromEntries(
-        leadFields.map(name => [name, String(fields.get(name) ?? "").trim()]),
+        leadFields.map(name => {
+            const value = fields.get(name);
+            return [name, typeof value === "string" ? value.trim() : ""];
+        }),
     );
-    if (leadFields.some(name => !payload[name])) return "invalid";
+    const errors = {};
+    for (const field of ["nome", "academia"]) {
+        const length = Array.from(payload[field]).length;
+        if (length < 2 || length > 120) errors[field] = fieldMessages[field];
+    }
+    if (payload.whatsapp.length > 32 || !/^\+?[0-9() .-]+$/.test(payload.whatsapp) ||
+        !/^[0-9]{10,13}$/.test(payload.whatsapp.replace(/[^0-9]/g, ""))) {
+        errors.whatsapp = fieldMessages.whatsapp;
+    }
+    payload.tier = payload.tier.toLowerCase();
+    if (!plans.has(payload.tier)) errors.tier = fieldMessages.tier;
+    return { payload, errors };
+}
+
+export async function submitLead(baseUrl, fields, fetchImpl = fetch) {
+    const { payload, errors } = validateLead(fields);
+    if (Object.keys(errors).length) return "invalid";
 
     try {
         const response = await fetchImpl(`${baseUrl}/api/contato`, {
@@ -32,38 +59,72 @@ export async function submitLead(baseUrl, fields, fetchImpl = fetch) {
     return "unavailable";
 }
 
-export function bindLeadForm(form, overlay, message, hostname) {
+export function bindLeadForm(form, message, hostname, planLinks = []) {
     const button = form.querySelector('button[type="submit"]');
     const baseUrl = apiBaseUrl(hostname, form.dataset.apiUrl);
-    let hideMessage;
+    const controls = Object.fromEntries(leadFields.map(name => [name, form.elements.namedItem(name)]));
+    const errorElements = Object.fromEntries(leadFields.map(name => [name, form.querySelector(`#lead-${name}-error`)]));
+    let sending = false;
+
+    function setError(name, error = "") {
+        if (error) controls[name].setAttribute("aria-invalid", "true");
+        else controls[name].removeAttribute("aria-invalid");
+        errorElements[name].textContent = error;
+        errorElements[name].hidden = !error;
+    }
+
+    function display(status) {
+        message.textContent = messages[status] ?? "";
+        message.dataset.state = status;
+    }
+
+    form.noValidate = true;
     button.disabled = false;
+    for (const field of leadFields) {
+        controls[field].addEventListener(field === "tier" ? "change" : "input", () => {
+            setError(field);
+            if (!sending) display("");
+        });
+    }
+    for (const link of planLinks) {
+        link.addEventListener("click", () => {
+            const plan = link.dataset.leadTier;
+            if (sending || !plans.has(plan)) return;
+            controls.tier.value = plan;
+            setError("tier");
+            display("");
+        });
+    }
     form.addEventListener("submit", async event => {
         event.preventDefault();
-        if (button.disabled) return;
-        button.disabled = true;
-        form.setAttribute("aria-busy", "true");
-        overlay.classList.remove("opacity-0", "pointer-events-none");
-        message.textContent = "ENVIANDO DADOS...";
-        clearTimeout(hideMessage);
+        if (sending) return;
+        const values = new FormData(form);
+        const { errors } = validateLead(values);
+        for (const field of leadFields) setError(field, errors[field]);
+        const firstInvalid = leadFields.find(field => errors[field]);
+        if (firstInvalid) {
+            display("invalid");
+            controls[firstInvalid].focus();
+            return;
+        }
 
-        let result;
+        sending = true;
+        button.setAttribute("aria-disabled", "true");
+        form.setAttribute("aria-busy", "true");
+        form.querySelector("fieldset").disabled = true;
+        display("sending");
+
+        let result = "unavailable";
         try {
-            result = await submitLead(baseUrl, new FormData(form));
-        } catch {
-            result = "unavailable";
+            result = await submitLead(baseUrl, values);
         } finally {
-            overlay.classList.add("opacity-0", "pointer-events-none");
+            sending = false;
+            button.removeAttribute("aria-disabled");
             form.removeAttribute("aria-busy");
-            button.disabled = false;
+            form.querySelector("fieldset").disabled = false;
         }
 
         if (result === "sent") form.reset();
-        message.textContent = messages[result];
-        message.classList.toggle("bg-cyan-400", result === "sent");
-        message.classList.toggle("text-black", result === "sent");
-        message.classList.toggle("bg-magenta-400", result !== "sent");
-        message.classList.toggle("text-white", result !== "sent");
-        message.classList.remove("-translate-y-full");
-        hideMessage = setTimeout(() => message.classList.add("-translate-y-full"), 5000);
+        display(result);
     });
 }
