@@ -28,20 +28,28 @@ wheels/
 .installed.cfg
 *.egg
 .venv/
+.coverage
+.coverage.*
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+htmlcov/
 venv/
 ENV/
 env/
 
 # Environment variables
 .env
-.env.local
-.env.*.local
+.env.*
 !.env.example
 
 # Database
 *.db
+*.db-*
 *.sqlite
+*.sqlite-*
 *.sqlite3
+*.sqlite3-*
 
 # IDE
 .vscode/
@@ -63,3 +71,5 @@ Thumbs.db
 _site/
 dist/
 .cache/
+playwright-report/
+test-results/
