@@ -1,0 +1,27 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/v2.12.0/C4_Container.puml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/v2.12.0/C4_Component.puml
+!pragma layout smetana
+LAYOUT_LEFT_RIGHT()
+title CyberEdge Gym — lead capture and administration
+
+Person(manager, "Gym manager", "Requests information about a service plan")
+Person(admin, "CyberEdge operator", "Reviews incoming leads")
+
+System_Boundary(cyberedge, "CyberEdge Gym") {
+    Container(site, "Landing page", "GitHub Pages / HTML / JavaScript", "Collects lead details and displays the submission result")
+    Container_Boundary(api, "Lead API [Render / FastAPI]") {
+        Component(capture, "Contact endpoint", "FastAPI / Pydantic", "Validates and records public submissions")
+        Component(list, "Admin list endpoint", "FastAPI", "Requires API key; paginates and filters leads")
+        Component(storage, "Storage", "Python sqlite3", "Opens a SQLite transaction for each operation")
+    }
+    ContainerDb(leads, "Lead database", "SQLite", "Contact data, service plan and lead status")
+}
+
+Rel(manager, site, "Completes the form", "HTTPS")
+Rel(site, capture, "Submits a lead", "HTTPS / JSON")
+Rel(admin, list, "Reads leads", "HTTPS / X-API-Key")
+Rel(capture, storage, "Creates leads")
+Rel(list, storage, "Reads leads")
+Rel(storage, leads, "Executes SQL")
+@enduml

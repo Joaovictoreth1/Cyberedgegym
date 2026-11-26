@@ -188,11 +188,28 @@
             background: transparent; border: none; outline: none; color: #00f0ff;
             width: 100%; padding: 8px 0; font-family: 'JetBrains Mono', monospace; font-size: 0.875rem;
         }
-        .term-input::placeholder { color: rgba(255,255,255,0.2); }
         .term-line { position: relative; border-bottom: 1px solid rgba(0,240,255,0.2); padding-left: 20px; transition: border-color 0.3s; }
         .term-line::before { content: ">"; position: absolute; left: 0; top: 10px; color: #ff003c; font-family: monospace; }
         .term-line:focus-within { border-bottom-color: #00f0ff; }
         .term-line:focus-within::before { color: #00f0ff; animation: blink 1s step-end infinite; }
+        .term-field { display: grid; gap: .375rem; min-width: 0; }
+        .term-label { color: #e5e7eb; font-size: .875rem; font-weight: 600; }
+        .term-input { min-height: 2.75rem; }
+        .term-input:focus-visible, .lead-submit:focus-visible, .plan-link:focus-visible {
+            outline: 2px solid #00f0ff;
+            outline-offset: 3px;
+        }
+        .term-hint, .term-error, .lead-status { font-size: .875rem; line-height: 1.5; }
+        .term-hint { color: #9ca3af; }
+        .term-error, .lead-status[data-state="invalid"], .lead-status[data-state="unavailable"] { color: #fda4af; }
+        .lead-status { color: #e5e7eb; }
+        .lead-status[data-state="sent"] { color: #67e8f9; }
+        .lead-submit[aria-disabled="true"] { cursor: progress; opacity: .7; }
+        .plan-link { display: inline-flex; align-items: center; min-height: 2.75rem; color: #67e8f9; text-decoration: underline; }
+        @media (prefers-reduced-motion: reduce) {
+            .term-line, .lead-submit { transition: none; }
+            .term-line:focus-within::before { animation: none; }
+        }
         @keyframes blink { 50% { opacity: 0; } }
 
         /* ── LOADER WRAPPER ── */
@@ -212,21 +229,6 @@
     <!-- CURSOR -->
     <div id="cursor-dot" class="hidden lg:block"></div>
     <div id="cursor-ring" class="hidden lg:block"></div>
-
-    <!-- TERMINAL ANALYSIS OVERLAY (Triggers on Form Submit) -->
-    <div id="analysis-screen" class="fixed inset-0 bg-void/95 backdrop-blur-md z-[10000] flex flex-col items-center justify-center transition-all duration-700 opacity-0 pointer-events-none">
-        <div class="w-full max-w-3xl p-8 font-mono text-sm text-cyan-400">
-            <div class="flex items-center gap-4 mb-8 border-b border-cyan-400/20 pb-4">
-                <div class="w-2 h-2 bg-magenta-400 animate-pulse"></div>
-                <span class="tracking-widest">SYSTEM OVERRIDE // ALOCANDO ENGENHARIA</span>
-                <span id="analysis-pct" class="ml-auto text-white text-2xl font-bold">0%</span>
-            </div>
-            <div id="term-content" class="flex flex-col gap-2 h-64 overflow-hidden text-xs opacity-80"></div>
-        </div>
-    </div>
-
-    <!-- NOTIFICATION SYSTEM -->
-    <div id="sys-msg" class="fixed top-0 left-0 w-full p-3 transform -translate-y-full transition-transform duration-500 z-[9000] font-mono text-[10px] text-center tracking-widest uppercase shadow-[0_0_20px_rgba(0,240,255,0.3)]"></div>
 
     <!-- MAIN APP -->
     <div id="app-content" class="h-screen overflow-y-auto overflow-x-hidden relative z-10 scroll-smooth" role="main">
@@ -474,6 +476,7 @@
                                     <li class="flex items-start gap-3"><span class="text-cyan-400 mt-0.5">✓</span> Destravamento de Catraca</li>
                                     <li class="flex items-start gap-3"><span class="text-cyan-400 mt-0.5">✓</span> Suporte Técnico Padrão</li>
                                 </ul>
+                                <a href="#contact" data-lead-tier="start" class="plan-link mt-5">Consultar plano Start</a>
                             </div>
                         </div>
                     </div>
@@ -500,6 +503,7 @@
                                     <li class="flex items-start gap-3"><span class="text-cyan-400 mt-0.5">✓</span> App Personalizado Avançado</li>
                                     <li class="flex items-start gap-3"><span class="text-cyan-400 mt-0.5">✓</span> Switches de Alta Performance</li>
                                 </ul>
+                                <a href="#contact" data-lead-tier="pro" class="plan-link mt-5">Consultar plano Pro</a>
                             </div>
                         </div>
                     </div>
@@ -523,6 +527,7 @@
                                     <li class="flex items-start gap-3"><span class="text-magenta-400 mt-0.5">✓</span> Edge Server Dedicado Premium</li>
                                     <li class="flex items-start gap-3"><span class="text-magenta-400 mt-0.5">✓</span> Suporte VIP 24/7 (SLA < 2h)</li>
                                 </ul>
+                                <a href="#contact" data-lead-tier="enterprise" class="plan-link mt-5">Consultar plano Enterprise</a>
                             </div>
                         </div>
                     </div>
@@ -532,12 +537,12 @@
         </section>
 
         <!-- FORM / TERMINAL SECTION -->
-        <section id="contact" class="py-40 relative z-10 px-6 md:px-12">
+        <section id="contact" tabindex="-1" aria-labelledby="contact-heading" class="py-40 relative z-10 px-6 md:px-12">
             <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20">
                 
                 <div>
                     <span class="reveal font-mono text-cyan-400 tracking-superwide text-[10px] block mb-6">// 04_INIT_DEPLOYMENT</span>
-                    <h2 class="reveal font-sync text-4xl md:text-5xl text-white mb-6">ESTABELECER<br>CONEXÃO</h2>
+                    <h2 id="contact-heading" class="reveal font-sync text-4xl md:text-5xl text-white mb-6">ESTABELECER<br>CONEXÃO</h2>
                     <p class="reveal font-sans text-gray-400 mb-8 max-w-sm">Conecte-se com nossa engenharia. Desenvolveremos o plano diretor da sua infraestrutura em 24 horas.</p>
                     <ul class="reveal space-y-4 font-mono text-[10px] text-gray-500 tracking-widest">
                         <li class="flex items-center gap-4"><div class="w-1 h-1 bg-cyan-400"></div> SETUP ZERO DOWNTIME</li>
@@ -554,29 +559,51 @@
                     <div class="absolute bottom-0 right-0 w-4 h-px bg-cyan-400"></div>
                     <div class="absolute bottom-0 right-0 w-px h-4 bg-cyan-400"></div>
                     
-                    <form id="edge-form" class="space-y-6 flex flex-col h-full justify-center relative z-10">
-                        <div class="term-line sound-type">
-                            <input type="text" class="term-input" placeholder="NOME_DO_GESTOR" required />
-                        </div>
-                        <div class="term-line sound-type">
-                            <input type="text" class="term-input" placeholder="NOME_DA_ACADEMIA" required />
-                        </div>
-                        <div class="term-line sound-type">
-                            <input type="tel" class="term-input" placeholder="WHATSAPP" required />
-                        </div>
-                        <div class="term-line sound-type">
-                            <select class="term-input" required style="appearance: none; background-color: transparent;">
-                                <option value="" disabled selected>SELECIONE_O_TIER</option>
-                                <option value="start" class="bg-surface">TIER 01 - START (Até 500 alunos) — R$ 1.000/trimestre</option>
-                                <option value="pro" class="bg-surface">TIER 02 - PRO (501 a 1.000 alunos) — R$ 2.000/trimestre</option>
-                                <option value="enterprise" class="bg-surface">TIER 03 - ENTERPRISE (Acima de 1.000) — R$ 3.000/bimestre</option>
-                            </select>
-                        </div>
-                        
-                        <button type="submit" class="mt-8 sound-click magnetic w-full py-4 font-mono text-[10px] tracking-superwide bg-cyan-400 text-black font-bold hover:bg-white hover:text-black transition-colors duration-300">
-                            EXECUTAR DEPLOY
+                    <form id="edge-form" method="post" aria-describedby="lead-help" data-api-url="https://cyberedge-api.onrender.com" class="relative z-10">
+                        <p id="lead-help" class="term-hint mb-6">Todos os campos são obrigatórios. Use um número pelo qual nossa equipe possa falar com você.</p>
+                        <fieldset class="space-y-5 min-w-0">
+                            <legend class="sr-only">Dados para contato</legend>
+                            <div class="term-field">
+                                <label class="term-label" for="lead-nome">Nome do gestor</label>
+                                <div class="term-line sound-type">
+                                    <input id="lead-nome" type="text" name="nome" autocomplete="name" aria-describedby="lead-nome-error" minlength="2" maxlength="120" class="term-input" required />
+                                </div>
+                                <p id="lead-nome-error" class="term-error" hidden></p>
+                            </div>
+                            <div class="term-field">
+                                <label class="term-label" for="lead-academia">Nome da academia</label>
+                                <div class="term-line sound-type">
+                                    <input id="lead-academia" type="text" name="academia" autocomplete="organization" aria-describedby="lead-academia-error" minlength="2" maxlength="120" class="term-input" required />
+                                </div>
+                                <p id="lead-academia-error" class="term-error" hidden></p>
+                            </div>
+                            <div class="term-field">
+                                <label class="term-label" for="lead-whatsapp">WhatsApp</label>
+                                <div class="term-line sound-type">
+                                    <input id="lead-whatsapp" type="tel" name="whatsapp" autocomplete="tel" aria-describedby="lead-phone-help lead-whatsapp-error" minlength="10" maxlength="32" class="term-input" required />
+                                </div>
+                                <p id="lead-phone-help" class="term-hint">Inclua o DDD. Exemplo: (11) 99999-0000.</p>
+                                <p id="lead-whatsapp-error" class="term-error" hidden></p>
+                            </div>
+                            <div class="term-field">
+                                <label class="term-label" for="lead-tier">Plano de interesse</label>
+                                <div class="term-line sound-type">
+                                    <select id="lead-tier" name="tier" aria-describedby="lead-tier-error" class="term-input" required>
+                                        <option value="" disabled selected>Escolha um plano</option>
+                                        <option value="start" class="bg-surface">Start — até 500 alunos</option>
+                                        <option value="pro" class="bg-surface">Pro — de 501 a 1.000 alunos</option>
+                                        <option value="enterprise" class="bg-surface">Enterprise — acima de 1.000 alunos</option>
+                                    </select>
+                                </div>
+                                <p id="lead-tier-error" class="term-error" hidden></p>
+                            </div>
+                        </fieldset>
+                        <button type="submit" disabled class="lead-submit mt-6 sound-click w-full py-4 font-mono text-xs bg-cyan-400 text-black font-bold hover:bg-white transition-colors duration-300 disabled:opacity-50">
+                            Enviar solicitação
                         </button>
+                        <noscript>Ative o JavaScript para enviar sua solicitação.</noscript>
                     </form>
+                    <p id="lead-status" role="status" aria-atomic="true" class="lead-status relative z-10 mt-3"></p>
                 </div>
             </div>
         </section>
@@ -618,14 +645,6 @@
         }).toDestination();
         synthType.volume.value = -35;
 
-        // Synth for Boot sequence
-        const synthBoot = new Tone.FMSynth({
-            harmonicity: 0.5, modulationIndex: 10, oscillator: { type: "sawtooth" },
-            envelope: { attack: 0.1, decay: 2, sustain: 0.5, release: 2 },
-            modulation: { type: "square" }, modulationEnvelope: { attack: 0.5, decay: 0, sustain: 1, release: 0.5 }
-        }).toDestination();
-        synthBoot.volume.value = -25;
-
         // Init Audio Context on first user interaction
         document.body.addEventListener('pointerdown', async () => {
             if (!audioInit) {
@@ -646,22 +665,7 @@
         });
 
 
-        // --- 2. NOTIFICATION SYSTEM ---
-        const sysMsg = document.getElementById('sys-msg');
-        function showMsg(text, type = 'error') {
-            sysMsg.innerText = text;
-            sysMsg.className = `fixed top-0 left-0 w-full p-3 transform transition-transform duration-500 z-[9000] font-mono text-[10px] text-center tracking-widest uppercase ${
-                type === 'error' ? 'bg-magenta-400 text-white shadow-[0_0_20px_rgba(255,0,60,0.3)]' : 'bg-cyan-400 text-black shadow-[0_0_20px_rgba(0,240,255,0.3)]'
-            }`;
-            requestAnimationFrame(() => sysMsg.classList.remove('-translate-y-full'));
-            if(audioInit) {
-                type === 'error' ? synthClick.triggerAttackRelease("C1", "8n") : synthHover.triggerAttackRelease(["C6", "E6", "G6"], "8n");
-            }
-            setTimeout(() => sysMsg.classList.add('-translate-y-full'), 3000);
-        }
-
-
-        // --- 3. THREE.JS IMMERSIVE DATA TUNNEL ---
+        // --- THREE.JS IMMERSIVE DATA TUNNEL ---
         const container = document.getElementById('webgl-container');
         const scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x000000, 0.002);
@@ -886,111 +890,15 @@
         document.querySelectorAll('.scramble-text').forEach(el => scrambleObs.observe(el));
 
 
-        // --- 7. TERMINAL SUBMIT SEQUENCE ---
-        const form = document.getElementById('edge-form');
-        const analysisScreen = document.getElementById('analysis-screen');
-        const termContent = document.getElementById('term-content');
-        const analysisPct = document.getElementById('analysis-pct');
-
-        // ⚠️  Troque pela URL real do backend em produção
-        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'http://localhost:8000'
-            : 'https://cyberedge-api.railway.app'; // ← substitua pela URL do Railway/Render
-
-        const analysisLogs = [
-            "ESTABELECENDO CONEXÃO SEGURA (AES-256)...",
-            "VERIFICANDO LATÊNCIA DA REGIÃO ALVO... [OK]",
-            "CALCULANDO VOLUME DE DADOS EDGE...",
-            "ALOCANDO NÓS DE PROCESSAMENTO...",
-            "GERANDO TOPOLOGIA DE REDE LOCAL...",
-            "ENGENHARIA NOTIFICADA.",
-            "DEPLOYMENT AUTORIZADO."
-        ];
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const inputs = form.querySelectorAll('input, select');
-            let valid = true;
-            inputs.forEach(i => { if(!i.value.trim()) valid = false; });
-
-            if(!valid) {
-                showMsg("FALHA: PARÂMETROS OBRIGATÓRIOS AUSENTES.", "error");
-                return;
-            }
-
-            // Coleta os dados do formulário
-            const formData = {
-                nome:     form.querySelector('input[type="text"]:nth-of-type(1)') 
-                            ? form.querySelectorAll('input[type="text"]')[0].value 
-                            : '',
-                academia: form.querySelectorAll('input[type="text"]')[1]?.value || '',
-                whatsapp: form.querySelector('input[type="tel"]')?.value || '',
-                tier:     form.querySelector('select')?.value || '',
-            };
-
-            // Start Immersive Terminal Analysis
-            analysisScreen.classList.remove('opacity-0', 'pointer-events-none');
-            if(audioInit) synthBoot.triggerAttackRelease("C2", "2n");
-            
-            termContent.innerHTML = '';
-            let logIdx = 0;
-            let pct = 0;
-
-            const bootInterval = setInterval(() => {
-                pct += Math.floor(Math.random() * 12) + 1;
-                if(pct > 100) pct = 100;
-                analysisPct.innerText = pct + "%";
-
-                if (logIdx < analysisLogs.length && Math.random() > 0.3) {
-                    const line = document.createElement('div');
-                    line.innerText = `root@deploy:~# ${analysisLogs[logIdx]}`;
-                    termContent.appendChild(line);
-                    termContent.scrollTop = termContent.scrollHeight;
-                    if(audioInit) synthType.triggerAttackRelease("32n"); 
-                    logIdx++;
-                }
-
-                if (pct === 100) {
-                    clearInterval(bootInterval);
-                }
-            }, 100);
-
-            // Envio real para a API
-            try {
-                const response = await fetch(`${API_URL}/api/contato`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData),
-                });
-
-                // Aguarda animação terminar
-                await new Promise(r => setTimeout(r, 1800));
-                analysisScreen.classList.add('opacity-0', 'pointer-events-none');
-
-                if (response.ok) {
-                    if(audioInit) synthClick.triggerAttackRelease("C4", "8n");
-                    form.reset();
-                    showMsg("DADOS TRANSMITIDOS. ENGENHARIA A CAMINHO.", "success");
-                } else {
-                    const err = await response.json();
-                    const msg = err?.detail?.[0]?.msg || "Erro ao processar dados.";
-                    showMsg(`FALHA: ${msg.toUpperCase()}`, "error");
-                }
-            } catch (networkError) {
-                // Backend offline — salva localmente como fallback
-                console.warn("[CyberEdge] Backend offline. Dados salvos localmente:", formData);
-                const pending = JSON.parse(localStorage.getItem('cyberedge_pending') || '[]');
-                pending.push({ ...formData, timestamp: new Date().toISOString() });
-                localStorage.setItem('cyberedge_pending', JSON.stringify(pending));
-
-                await new Promise(r => setTimeout(r, 1800));
-                analysisScreen.classList.add('opacity-0', 'pointer-events-none');
-                form.reset();
-                showMsg("DADOS RECEBIDOS. SINCRONIZAÇÃO PENDENTE.", "success");
-            }
-        });
-
+    </script>
+    <script type="module">
+        import { bindLeadForm } from "./lead-form.js";
+        bindLeadForm(
+            document.getElementById("edge-form"),
+            document.getElementById("lead-status"),
+            window.location.hostname,
+            document.querySelectorAll("[data-lead-tier]"),
+        );
     </script>
 </body>
 </html>
