@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+    .text-glow-cyan { text-shadow: 0 0 20px rgba(0, 240, 255, 0.4), 0 0 40px rgba(0, 240, 255, 0.1); }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* High-performance reveals */
+    .motion-enabled .reveal { opacity: 0; transform: translateY(40px); transition: all 1s cubic-bezier(0.16, 1, 0.3, 1); will-change: transform, opacity; }
+    .motion-enabled .reveal.active { opacity: 1; transform: translateY(0); }
+
+    .glass-panel {
+        background: rgba(10, 10, 15, 0.3);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(0, 240, 255, 0.1);
+    }
+
+    .text-outline {
+        -webkit-text-stroke: 1px rgba(255,255,255,0.1);
+        color: transparent;
+    }
+}
+
+body {
+
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #000;
+}
+
+/* ── CRT & NOISE ── */
+.noise {
+    position: fixed; inset: 0; z-index: 50; pointer-events: none; opacity: 0.04; mix-blend-mode: overlay;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+.scanlines {
+    position: fixed; inset: 0; z-index: 49; pointer-events: none; opacity: 0.15;
+    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,1) 50%, rgba(0,0,0,1));
+    background-size: 100% 4px;
+}
+.vignette {
+    position: fixed; inset: 0; z-index: 48; pointer-events: none;
+    background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.8) 100%);
+}
+
+/* ── GLITCH EFFECT ── */
+.glitch { position: relative; }
+.glitch::before, .glitch::after {
+    content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: transparent;
+}
+.glitch::before {
+    left: 2px; text-shadow: -1px 0 red; clip: rect(24px, 550px, 90px, 0);
+    animation: glitch-anim-2 3s infinite linear alternate-reverse;
+}
+.glitch::after {
+    left: -2px; text-shadow: -1px 0 blue; clip: rect(85px, 550px, 140px, 0);
+    animation: glitch-anim 2.5s infinite linear alternate-reverse;
+}
+@keyframes glitch-anim {
+    0% { clip: rect(3px, 9999px, 86px, 0); }
+    20% { clip: rect(65px, 9999px, 12px, 0); }
+    40% { clip: rect(104px, 9999px, 56px, 0); }
+    60% { clip: rect(14px, 9999px, 87px, 0); }
+    80% { clip: rect(98px, 9999px, 45px, 0); }
+    100% { clip: rect(34px, 9999px, 12px, 0); }
+}
+@keyframes glitch-anim-2 {
+    0% { clip: rect(12px, 9999px, 45px, 0); }
+    20% { clip: rect(89px, 9999px, 23px, 0); }
+    40% { clip: rect(34px, 9999px, 78px, 0); }
+    60% { clip: rect(76px, 9999px, 12px, 0); }
+    80% { clip: rect(23px, 9999px, 90px, 0); }
+    100% { clip: rect(56px, 9999px, 34px, 0); }
+}
+
+/* ── CUSTOM CURSOR ── */
+#cursor-dot {
+    position: fixed; top: 0; left: 0; width: 6px; height: 6px; background: #00f0ff; border-radius: 50%;
+    pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); box-shadow: 0 0 12px #00f0ff;
+}
+#cursor-ring {
+    position: fixed; top: 0; left: 0; width: 40px; height: 40px; border: 1px solid rgba(0, 240, 255, 0.4);
+    border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%, -50%);
+    transition: width 0.3s ease-out, height 0.3s ease-out, background 0.3s ease-out;
+    will-change: transform, width, height;
+}
+
+/* ── 3D SPOTLIGHT CARD ── */
+.spotlight-card {
+    position: relative; border-radius: 2px; background: rgba(255,255,255,0.03);
+    transform-style: preserve-3d; perspective: 1000px;
+}
+.spotlight-card::before {
+    content: ""; position: absolute; inset: -1px; z-index: -1;
+    background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(0, 240, 255, 0.3), transparent 40%);
+    opacity: 0; transition: opacity 0.5s; border-radius: 2px;
+}
+.spotlight-card:hover::before { opacity: 1; }
+.spotlight-inner {
+    background: #050508; height: calc(100% - 2px); width: calc(100% - 2px); margin: 1px;
+    position: relative; z-index: 1; border-radius: 1px; overflow: hidden;
+    transform: translateZ(20px); /* Creates the 3D pop effect */
+    transition: transform 0.1s ease-out;
+}
+.spotlight-content { transform: translateZ(40px); }
+
+/* ── CANVAS BACKGROUND ── */
+#webgl-container { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+
+/* ── MARQUEE ── */
+.marquee-wrapper { display: flex; width: max-content; animation: marquee 30s linear infinite; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+
+/* ── TERMINAL FORM ── */
+.term-input {
+    background: transparent; border: none; outline: none; color: #00f0ff;
+    width: 100%; padding: 8px 0; font-family: 'JetBrains Mono', monospace; font-size: 0.875rem;
+}
+.term-input::placeholder { color: rgba(255,255,255,0.2); }
+.term-line { position: relative; border-bottom: 1px solid rgba(0,240,255,0.2); padding-left: 20px; transition: border-color 0.3s; }
+.term-line::before { content: ">"; position: absolute; left: 0; top: 10px; color: #ff003c; font-family: monospace; }
+.term-line:focus-within { border-bottom-color: #00f0ff; }
+.term-line:focus-within::before { color: #00f0ff; animation: blink 1s step-end infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ── LOADER WRAPPER ── */
+#app-content { opacity: 0; animation: site-fade-in 1.5s ease-out forwards; }
+@keyframes site-fade-in { to { opacity: 1; } }
+
+.custom-cursor { cursor: none; }
+.term-label { display: block; color: #d1d5db; font: 0.75rem 'JetBrains Mono', monospace; }
+.term-input:focus-visible { outline: 2px solid #00f0ff; outline-offset: 2px; }
+.form-notice { min-height: 1.25rem; font-size: 0.875rem; }
+.form-notice[data-state="error"] { color: #fda4af; }
+.form-notice[data-state="success"] { color: #00f0ff; }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "cyberedgegym",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.8.0 <25"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "lint": "html-validate index.html && eslint --max-warnings=0 frontend scripts *.js *.cjs",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.65.1",
+    "eslint": "10.15.0",
+    "globals": "17.14.0",
+    "html-validate": "11.22.1",
+    "tailwindcss": "3.4.19"
+  }
+}
